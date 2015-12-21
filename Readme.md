@@ -1,9 +1,11 @@
 
+[![GoDoc](https://godoc.org/github.com/apex/log?status.svg)](https://godoc.org/github.com/apex/log)[![Build Status](https://semaphoreci.com/api/v1/projects/d8a8b1c0-45b0-4b89-b066-99d788d0b94c/642077/badge.svg)](https://semaphoreci.com/tj/log)
+
 # log
 
 Package log implements a simple structured logging API designed with few assumptions.
 
-## about
+## About
 
 This package is designed for centralized logging solutions such as Kinesis which require encoding and decoding before fanning-out to handlers. The API is very similar to Logrus, however does not make the same formatting assumptions which make it difficult to marshal/unmarshal an entry over the wire.
 
