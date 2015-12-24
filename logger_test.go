@@ -3,6 +3,7 @@ package log_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/apex/log"
 	"github.com/apex/log/handlers/discard"
@@ -102,14 +103,15 @@ func TestLogger_Trace_info(t *testing.T) {
 		e := h.Entries[0]
 		assert.Equal(t, e.Message, "upload")
 		assert.Equal(t, e.Level, log.InfoLevel)
-		assert.Equal(t, log.Fields{"file": "sloth.png", "complete": false}, e.Fields)
+		assert.Equal(t, log.Fields{"file": "sloth.png"}, e.Fields)
 	}
 
 	{
 		e := h.Entries[1]
 		assert.Equal(t, e.Message, "upload")
 		assert.Equal(t, e.Level, log.InfoLevel)
-		assert.Equal(t, log.Fields{"file": "sloth.png", "complete": true}, e.Fields)
+		assert.Equal(t, "sloth.png", e.Fields["file"])
+		assert.IsType(t, time.Duration(0), e.Fields["duration"])
 	}
 }
 
@@ -132,14 +134,16 @@ func TestLogger_Trace_error(t *testing.T) {
 		e := h.Entries[0]
 		assert.Equal(t, e.Message, "upload")
 		assert.Equal(t, e.Level, log.InfoLevel)
-		assert.Equal(t, log.Fields{"file": "sloth.png", "complete": false}, e.Fields)
+		assert.Equal(t, "sloth.png", e.Fields["file"])
 	}
 
 	{
 		e := h.Entries[1]
 		assert.Equal(t, e.Message, "upload")
 		assert.Equal(t, e.Level, log.ErrorLevel)
-		assert.Equal(t, log.Fields{"file": "sloth.png", "complete": true, "error": "boom"}, e.Fields)
+		assert.Equal(t, "sloth.png", e.Fields["file"])
+		assert.Equal(t, "boom", e.Fields["error"])
+		assert.IsType(t, time.Duration(0), e.Fields["duration"])
 	}
 }
 

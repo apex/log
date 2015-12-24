@@ -16,6 +16,7 @@ type Entry struct {
 	Level     Level     `json:"level"`
 	Timestamp time.Time `json:"timestamp"`
 	Message   string    `json:"message"`
+	start     time.Time
 }
 
 // NewEntry returns a new entry for `log`.
@@ -106,23 +107,19 @@ func (e *Entry) Fatalf(msg string, v ...interface{}) {
 // Trace returns a new entry with a Stop method to fire off
 // a corresponding completion log, useful with defer.
 func (e *Entry) Trace(msg string) *Entry {
-	e.WithField("complete", false).Info(msg)
-	return e.withMessage(msg)
+	e.Info(msg)
+	v := e.WithFields(e.Fields)
+	v.Message = msg
+	v.start = time.Now()
+	return v
 }
 
 // Stop should be used with Trace, to fire off the completion message. When
 // an `err` is passed the "error" field is set, and the log level is error.
 func (e *Entry) Stop(err *error) {
 	if *err == nil {
-		e.WithField("complete", true).Info(e.Message)
+		e.WithField("duration", time.Since(e.start)).Info(e.Message)
 	} else {
-		e.WithField("complete", true).WithError(*err).Error(e.Message)
+		e.WithField("duration", time.Since(e.start)).WithError(*err).Error(e.Message)
 	}
-}
-
-// withMessage returns an ew entry with the message set.
-func (e *Entry) withMessage(msg string) *Entry {
-	v := e.WithFields(e.Fields)
-	v.Message = msg
-	return v
 }
