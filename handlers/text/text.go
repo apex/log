@@ -4,11 +4,13 @@ package text
 import (
 	"fmt"
 	"io"
+	"sort"
 	"sync"
 
 	"github.com/apex/log"
 )
 
+// colors.
 const (
 	none   = 0
 	red    = 31
@@ -18,6 +20,7 @@ const (
 	gray   = 37
 )
 
+// colors mapping.
 var colors = [...]int{
 	log.DebugLevel: gray,
 	log.InfoLevel:  blue,
@@ -26,6 +29,7 @@ var colors = [...]int{
 	log.FatalLevel: red,
 }
 
+// strings mapping.
 var strings = [...]string{
 	log.DebugLevel: "DEBUG",
 	log.InfoLevel:  "INFO",
@@ -33,6 +37,19 @@ var strings = [...]string{
 	log.ErrorLevel: "ERROR",
 	log.FatalLevel: "FATAL",
 }
+
+// field used for sorting.
+type field struct {
+	Name  string
+	Value interface{}
+}
+
+// by sorts projects by call count.
+type byName []field
+
+func (a byName) Len() int           { return len(a) }
+func (a byName) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a byName) Less(i, j int) bool { return a[i].Name < a[j].Name }
 
 // Handler implementation.
 type Handler struct {
@@ -52,6 +69,14 @@ func (h *Handler) HandleLog(e *log.Entry) error {
 	color := colors[e.Level]
 	level := strings[e.Level]
 
+	var fields []field
+
+	for k, v := range e.Fields {
+		fields = append(fields, field{k, v})
+	}
+
+	sort.Sort(byName(fields))
+
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
@@ -59,8 +84,8 @@ func (h *Handler) HandleLog(e *log.Entry) error {
 
 	fmt.Fprintf(h.Writer, "\033[%dm%6s\033[0m %-25s", color, level, e.Message)
 
-	for k, v := range e.Fields {
-		fmt.Fprintf(h.Writer, " \033[%dm%s\033[0m=%v", color, k, v)
+	for _, f := range fields {
+		fmt.Fprintf(h.Writer, " \033[%dm%s\033[0m=%v", color, f.Name, f.Value)
 	}
 
 	fmt.Fprintln(h.Writer)
