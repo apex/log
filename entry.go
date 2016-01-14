@@ -3,7 +3,6 @@ package log
 import (
 	"fmt"
 	"os"
-	"runtime"
 	"time"
 )
 
@@ -53,18 +52,6 @@ func (e *Entry) WithError(err error) *Entry {
 	return e.WithField("error", err.Error())
 }
 
-// WithCaller includes the "filename" and "line" fields.
-func (e *Entry) WithCaller() *Entry {
-	if _, file, line, ok := runtime.Caller(1); ok {
-		return e.WithFields(Fields{
-			"filename": file,
-			"line":     line,
-		})
-	}
-
-	return e
-}
-
 // Debug level message.
 func (e *Entry) Debug(msg string) {
 	e.Logger.log(DebugLevel, e, msg)
@@ -82,14 +69,12 @@ func (e *Entry) Warn(msg string) {
 
 // Error level message.
 func (e *Entry) Error(msg string) {
-	ctx := e.WithCaller()
-	ctx.Logger.log(ErrorLevel, ctx, msg)
+	e.Logger.log(ErrorLevel, e, msg)
 }
 
 // Fatal level message, followed by an exit.
 func (e *Entry) Fatal(msg string) {
-	ctx := e.WithCaller()
-	ctx.Logger.log(FatalLevel, ctx, msg)
+	e.Logger.log(FatalLevel, e, msg)
 	os.Exit(1)
 }
 
