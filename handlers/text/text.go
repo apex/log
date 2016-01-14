@@ -6,9 +6,13 @@ import (
 	"io"
 	"sort"
 	"sync"
+	"time"
 
 	"github.com/apex/log"
 )
+
+// start time.
+var start = time.Now()
 
 // colors.
 const (
@@ -80,9 +84,8 @@ func (h *Handler) HandleLog(e *log.Entry) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
-	// TODO(tj): timestamp
-
-	fmt.Fprintf(h.Writer, "\033[%dm%6s\033[0m %-25s", color, level, e.Message)
+	ts := time.Since(start) / time.Second
+	fmt.Fprintf(h.Writer, "\033[%dm%6s\033[0m[%04d] %-25s", color, level, ts, e.Message)
 
 	for _, f := range fields {
 		fmt.Fprintf(h.Writer, " \033[%dm%s\033[0m=%v", color, f.Name, f.Value)
