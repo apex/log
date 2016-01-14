@@ -4,12 +4,16 @@ package text
 import (
 	"fmt"
 	"io"
+	"os"
 	"sort"
 	"sync"
 	"time"
 
 	"github.com/apex/log"
 )
+
+// Default handler outputting to stderr.
+var Default = New(os.Stderr)
 
 // start time.
 var start = time.Now()

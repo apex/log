@@ -3,11 +3,15 @@ package logfmt
 
 import (
 	"io"
+	"os"
 	"sync"
 
 	"github.com/apex/log"
 	"github.com/go-logfmt/logfmt"
 )
+
+// Default handler outputting to stderr.
+var Default = New(os.Stderr)
 
 // Handler implementation.
 type Handler struct {

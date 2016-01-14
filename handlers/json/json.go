@@ -4,10 +4,14 @@ package json
 import (
 	j "encoding/json"
 	"io"
+	"os"
 	"sync"
 
 	"github.com/apex/log"
 )
+
+// Default handler outputting to stderr.
+var Default = New(os.Stderr)
 
 // Handler implementation.
 type Handler struct {
