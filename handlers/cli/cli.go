@@ -28,8 +28,8 @@ const (
 	gray   = 37
 )
 
-// colors mapping.
-var colors = [...]int{
+// Colors mapping.
+var Colors = [...]int{
 	log.DebugLevel: gray,
 	log.InfoLevel:  blue,
 	log.WarnLevel:  yellow,
@@ -37,8 +37,8 @@ var colors = [...]int{
 	log.FatalLevel: red,
 }
 
-// strings mapping.
-var strings = [...]string{
+// Strings mapping.
+var Strings = [...]string{
 	log.DebugLevel: "•",
 	log.InfoLevel:  "•",
 	log.WarnLevel:  "•",
@@ -70,14 +70,14 @@ type Handler struct {
 func New(w io.Writer) *Handler {
 	return &Handler{
 		Writer:  w,
-		Padding: 1,
+		Padding: 3,
 	}
 }
 
 // HandleLog implements log.Handler.
 func (h *Handler) HandleLog(e *log.Entry) error {
-	color := colors[e.Level]
-	level := strings[e.Level]
+	color := Colors[e.Level]
+	level := Strings[e.Level]
 
 	var fields []field
 
