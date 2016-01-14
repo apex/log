@@ -88,13 +88,14 @@ func (h *Handler) HandleLog(e *log.Entry) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
-	fmt.Fprintf(h.Writer, "\033[%dm%6s\033[0m %-25s", color, level, e.Message)
+	ts := time.Since(start) / time.Second
+	fmt.Fprintf(h.Writer, "\033[%dm%6s\033[0m[%04d] %-25s", color, level, ts, e.Message)
 
 	for _, f := range fields {
 		fmt.Fprintf(h.Writer, " \033[%dm%s\033[0m=%v", color, f.Name, f.Value)
 	}
 
-	fmt.Fprintf(h.Writer, " [%d]\n", int(time.Since(start)/time.Millisecond))
+	fmt.Fprintln(h.Writer)
 
 	return nil
 }
