@@ -40,7 +40,7 @@ var colors = [...]int{
 // strings mapping.
 var strings = [...]string{
 	log.DebugLevel: "[ ]",
-	log.InfoLevel:  "[+]",
+	log.InfoLevel:  "[•]",
 	log.WarnLevel:  "[~]",
 	log.ErrorLevel: "[x]",
 	log.FatalLevel: "[x]",

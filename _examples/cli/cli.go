@@ -10,6 +10,7 @@ import (
 
 func main() {
 	log.SetHandler(cli.Default)
+	log.SetLevel(log.DebugLevel)
 
 	ctx := log.WithFields(log.Fields{
 		"file": "something.png",
@@ -17,11 +18,25 @@ func main() {
 		"user": "tobi",
 	})
 
-	for range time.Tick(time.Millisecond * 200) {
-		ctx.Info("upload")
-		ctx.Info("upload complete")
-		ctx.Warn("upload retry")
-		ctx.WithError(errors.New("unauthorized")).Error("upload failed")
-		ctx.Errorf("failed to upload %s", "img.png")
-	}
+	go func() {
+		for range time.Tick(time.Second) {
+			ctx.Debug("doing stuff")
+		}
+	}()
+
+	go func() {
+		for range time.Tick(100 * time.Millisecond) {
+			ctx.Info("uploading")
+			ctx.Info("upload complete")
+		}
+	}()
+
+	go func() {
+		for range time.Tick(2 * time.Second) {
+			err := errors.New("boom")
+			ctx.WithError(err).Error("upload failed")
+		}
+	}()
+
+	select {}
 }
