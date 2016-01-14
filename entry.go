@@ -80,28 +80,27 @@ func (e *Entry) Fatal(msg string) {
 
 // Debugf level formatted message.
 func (e *Entry) Debugf(msg string, v ...interface{}) {
-	e.Logger.log(DebugLevel, e, fmt.Sprintf(msg, v...))
+	e.Debug(fmt.Sprintf(msg, v...))
 }
 
 // Infof level formatted message.
 func (e *Entry) Infof(msg string, v ...interface{}) {
-	e.Logger.log(InfoLevel, e, fmt.Sprintf(msg, v...))
+	e.Info(fmt.Sprintf(msg, v...))
 }
 
 // Warnf level formatted message.
 func (e *Entry) Warnf(msg string, v ...interface{}) {
-	e.Logger.log(WarnLevel, e, fmt.Sprintf(msg, v...))
+	e.Warn(fmt.Sprintf(msg, v...))
 }
 
 // Errorf level formatted message.
 func (e *Entry) Errorf(msg string, v ...interface{}) {
-	e.Logger.log(ErrorLevel, e, fmt.Sprintf(msg, v...))
+	e.Error(fmt.Sprintf(msg, v...))
 }
 
 // Fatalf level formatted message, followed by an exit.
 func (e *Entry) Fatalf(msg string, v ...interface{}) {
-	e.Logger.log(FatalLevel, e, fmt.Sprintf(msg, v...))
-	os.Exit(1)
+	e.Fatal(fmt.Sprintf(msg, v...))
 }
 
 // Trace returns a new entry with a Stop method to fire off

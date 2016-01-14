@@ -23,5 +23,6 @@ func main() {
 		ctx.Info("upload complete")
 		ctx.Warn("upload retry")
 		ctx.WithError(errors.New("unauthorized")).Error("upload failed")
+		ctx.Errorf("failed to upload %s", "img.png")
 	}
 }
