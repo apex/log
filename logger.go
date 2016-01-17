@@ -21,6 +21,16 @@ func (f Fields) Fields() Fields {
 	return f
 }
 
+// The HandlerFunc type is an adapter to allow the use of ordinary functions as
+// log handlers. If f is a function with the appropriate signature,
+// HandlerFunc(f) is a Handler object that calls f.
+type HandlerFunc func(*Entry) error
+
+// HandleLog calls f(e).
+func (f HandlerFunc) HandleLog(e *Entry) error {
+	return f(e)
+}
+
 // Handler is used to handle log events, outputting them to
 // stdio or sending them to remote services. See the "handlers"
 // directory for implementations.
