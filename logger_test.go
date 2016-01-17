@@ -147,6 +147,24 @@ func TestLogger_Trace_error(t *testing.T) {
 	}
 }
 
+func TestLogger_HandlerFunc(t *testing.T) {
+	h := memory.New()
+	f := func(e *log.Entry) error {
+		return h.HandleLog(e)
+	}
+
+	l := &log.Logger{
+		Handler: log.HandlerFunc(f),
+		Level:   log.InfoLevel,
+	}
+
+	l.Infof("logged in %s", "Tobi")
+
+	e := h.Entries[0]
+	assert.Equal(t, e.Message, "logged in Tobi")
+	assert.Equal(t, e.Level, log.InfoLevel)
+}
+
 func BenchmarkLogger_small(b *testing.B) {
 	l := &log.Logger{
 		Handler: discard.New(),
