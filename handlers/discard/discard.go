@@ -5,6 +5,9 @@ import (
 	"github.com/apex/log"
 )
 
+// Default handler.
+var Default = New()
+
 // Handler implementation.
 type Handler struct{}
 
