@@ -14,6 +14,14 @@ func TestEntry_WithFields(t *testing.T) {
 	b := a.WithFields(Fields{"foo": "bar"})
 	assert.Equal(t, Fields{}, a.mergedFields())
 	assert.Equal(t, Fields{"foo": "bar"}, b.mergedFields())
+
+	c := a.WithFields(Fields{"foo": "hello", "bar": "world"})
+
+	e := c.finalize(InfoLevel, "upload")
+	assert.Equal(t, e.Message, "upload")
+	assert.Equal(t, e.Fields, Fields{"foo": "hello", "bar": "world"})
+	assert.Equal(t, e.Level, InfoLevel)
+	assert.NotEmpty(t, e.Timestamp)
 }
 
 func TestEntry_WithField(t *testing.T) {
