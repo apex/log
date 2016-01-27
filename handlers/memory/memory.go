@@ -3,11 +3,14 @@
 package memory
 
 import (
+	"sync"
+
 	"github.com/apex/log"
 )
 
 // Handler implementation.
 type Handler struct {
+	mu      sync.Mutex
 	Entries []*log.Entry
 }
 
@@ -18,6 +21,8 @@ func New() *Handler {
 
 // HandleLog implements log.Handler.
 func (h *Handler) HandleLog(e *log.Entry) error {
+	h.mu.Lock()
 	h.Entries = append(h.Entries, e)
+	h.mu.Unlock()
 	return nil
 }
