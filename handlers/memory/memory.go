@@ -22,7 +22,7 @@ func New() *Handler {
 // HandleLog implements log.Handler.
 func (h *Handler) HandleLog(e *log.Entry) error {
 	h.mu.Lock()
+	defer h.mu.Unlock()
 	h.Entries = append(h.Entries, e)
-	h.mu.Unlock()
 	return nil
 }
