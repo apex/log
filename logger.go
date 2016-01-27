@@ -117,12 +117,15 @@ func (l *Logger) Trace(msg string) *Entry {
 	return NewEntry(l).Trace(msg)
 }
 
-// log the message, invoking the handler.
+// log the message, invoking the handler. We clone the entry here
+// to bypass the overhead in Entry methods when the level is not
+// met.
 func (l *Logger) log(level Level, e *Entry, msg string) {
 	if level < l.Level {
 		return
 	}
 
+	e = e.clone()
 	e.Level = level
 	e.Message = msg
 	e.Timestamp = time.Now()
