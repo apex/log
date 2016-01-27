@@ -54,27 +54,27 @@ func (e *Entry) WithError(err error) *Entry {
 
 // Debug level message.
 func (e *Entry) Debug(msg string) {
-	e.Logger.log(DebugLevel, e, msg)
+	e.Logger.log(DebugLevel, e.WithFields(e.Fields), msg)
 }
 
 // Info level message.
 func (e *Entry) Info(msg string) {
-	e.Logger.log(InfoLevel, e, msg)
+	e.Logger.log(InfoLevel, e.WithFields(e.Fields), msg)
 }
 
 // Warn level message.
 func (e *Entry) Warn(msg string) {
-	e.Logger.log(WarnLevel, e, msg)
+	e.Logger.log(WarnLevel, e.WithFields(e.Fields), msg)
 }
 
 // Error level message.
 func (e *Entry) Error(msg string) {
-	e.Logger.log(ErrorLevel, e, msg)
+	e.Logger.log(ErrorLevel, e.WithFields(e.Fields), msg)
 }
 
 // Fatal level message, followed by an exit.
 func (e *Entry) Fatal(msg string) {
-	e.Logger.log(FatalLevel, e, msg)
+	e.Logger.log(FatalLevel, e.WithFields(e.Fields), msg)
 	os.Exit(1)
 }
 
