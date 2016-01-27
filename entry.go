@@ -17,29 +17,22 @@ type Entry struct {
 	Timestamp time.Time `json:"timestamp"`
 	Message   string    `json:"message"`
 	start     time.Time
+	fields    []Fields
 }
 
 // NewEntry returns a new entry for `log`.
 func NewEntry(log *Logger) *Entry {
 	return &Entry{
 		Logger: log,
-		Fields: make(Fields),
 	}
 }
 
 // WithFields returns a new entry with `fields` set.
 func (e *Entry) WithFields(fields Fielder) *Entry {
-	f := Fields{}
-
-	for k, v := range e.Fields {
-		f[k] = v
+	return &Entry{
+		Logger: e.Logger,
+		fields: append(e.fields, fields.Fields()),
 	}
-
-	for k, v := range fields.Fields() {
-		f[k] = v
-	}
-
-	return &Entry{Logger: e.Logger, Fields: f}
 }
 
 // WithField returns a new entry with the `key` and `value` set.
@@ -123,10 +116,26 @@ func (e *Entry) Stop(err *error) {
 	}
 }
 
-// clone the entry.
-func (e *Entry) clone() *Entry {
+// mergedFields returns the fields list collapsed into a single map.
+func (e *Entry) mergedFields() Fields {
+	f := Fields{}
+
+	for _, fields := range e.fields {
+		for k, v := range fields {
+			f[k] = v
+		}
+	}
+
+	return f
+}
+
+// finalize returns a copy of the Entry with Fields merged.
+func (e *Entry) finalize(level Level, msg string) *Entry {
 	return &Entry{
-		Logger: e.Logger,
-		Fields: e.Fields,
+		Logger:    e.Logger,
+		Fields:    e.mergedFields(),
+		Level:     level,
+		Message:   msg,
+		Timestamp: time.Now(),
 	}
 }
