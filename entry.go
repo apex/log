@@ -27,14 +27,6 @@ func NewEntry(log *Logger) *Entry {
 	}
 }
 
-// clone the entry.
-func (e *Entry) clone() *Entry {
-	return &Entry{
-		Logger: e.Logger,
-		Fields: e.Fields,
-	}
-}
-
 // WithFields returns a new entry with `fields` set.
 func (e *Entry) WithFields(fields Fielder) *Entry {
 	f := Fields{}
@@ -128,5 +120,13 @@ func (e *Entry) Stop(err *error) {
 		e.WithField("duration", time.Since(e.start)).Info(e.Message)
 	} else {
 		e.WithField("duration", time.Since(e.start)).WithError(*err).Error(e.Message)
+	}
+}
+
+// clone the entry.
+func (e *Entry) clone() *Entry {
+	return &Entry{
+		Logger: e.Logger,
+		Fields: e.Fields,
 	}
 }
