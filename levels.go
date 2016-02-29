@@ -29,6 +29,11 @@ func (l Level) String() string {
 	return levelNames[l]
 }
 
+// MarshalJSON returns the level string.
+func (l Level) MarshalJSON() ([]byte, error) {
+	return []byte(`"` + l.String() + `"`), nil
+}
+
 // ParseLevel parses level string.
 func ParseLevel(s string) (Level, error) {
 	switch s {
