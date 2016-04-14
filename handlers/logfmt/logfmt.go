@@ -31,7 +31,7 @@ func (h *Handler) HandleLog(e *log.Entry) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
-	// TODO(tj): timestamp
+	h.enc.EncodeKeyval("timestamp", e.Timestamp)
 	h.enc.EncodeKeyval("level", e.Level.String())
 	h.enc.EncodeKeyval("message", e.Message)
 
