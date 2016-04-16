@@ -1,18 +1,22 @@
 package log
 
 // singletons ftw?
-var Log = &Logger{
+var Log Interface = &Logger{
 	Level: InfoLevel,
 }
 
 // SetHandler sets the handler. This is not thread-safe.
 func SetHandler(h Handler) {
-	Log.Handler = h
+	if logger, ok := Log.(*Logger); ok {
+		logger.Handler = h
+	}
 }
 
 // SetLevel sets the log level. This is not thread-safe.
 func SetLevel(l Level) {
-	Log.Level = l
+	if logger, ok := Log.(*Logger); ok {
+		logger.Level = l
+	}
 }
 
 // WithFields returns a new entry with `fields` set.
