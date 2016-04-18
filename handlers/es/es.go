@@ -72,7 +72,7 @@ func (h *Handler) HandleLog(e *log.Entry) error {
 	h.batch.Add(e)
 
 	if h.batch.Size() >= h.BufferSize {
-		h.flush(h.batch)
+		go h.flush(h.batch)
 		h.batch = nil
 	}
 
