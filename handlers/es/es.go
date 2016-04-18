@@ -1,5 +1,5 @@
 // Package es implements an Elasticsearch batch handler. Currently this implementation
-// assumes the index format of "index-YY-MM-DD".
+// assumes the index format of "logs-YY-MM-DD".
 package es
 
 import (
