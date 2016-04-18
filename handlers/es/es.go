@@ -16,6 +16,8 @@ import (
 // TODO(tj): allow index configuration
 // TODO(tj): allow dumping logs to stderr on timeout
 // TODO(tj): allow custom format that does not include .fields etc
+// TODO(tj): allow interval flushes
+// TODO(tj): allow explicit Flush() (for Lambda where you have to flush at the end of function)
 
 // index for the current time.
 func index() string {
