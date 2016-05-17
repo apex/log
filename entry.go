@@ -106,11 +106,31 @@ func (e *Entry) Trace(msg string) *Entry {
 	return v
 }
 
+// TraceLevel returns a new entry with a Stop method to fire off
+// a corresponding completion log, useful with defer.
+func (e *Entry) TraceLevel(level Level, msg string) *Entry {
+	e.Logger.log(level, e, msg)
+	v := e.WithFields(e.Fields)
+	v.Message = msg
+	v.start = time.Now()
+	return v
+}
+
 // Stop should be used with Trace, to fire off the completion message. When
 // an `err` is passed the "error" field is set, and the log level is error.
 func (e *Entry) Stop(err *error) {
 	if err == nil || *err == nil {
 		e.WithField("duration", time.Since(e.start)).Info(e.Message)
+	} else {
+		e.WithField("duration", time.Since(e.start)).WithError(*err).Error(e.Message)
+	}
+}
+
+// StopLevel should be used with Trace, to fire off the completion message. When
+// an `err` is passed the "error" field is set, and the log level is error.
+func (e *Entry) StopLevel(level Level, err *error) {
+	if err == nil || *err == nil {
+		e.Logger.log(level, e.WithField("duration", time.Since(e.start)), e.Message)
 	} else {
 		e.WithField("duration", time.Since(e.start)).WithError(*err).Error(e.Message)
 	}
