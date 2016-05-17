@@ -13,16 +13,10 @@ import (
 	"github.com/apex/log"
 )
 
-// TODO(tj): allow index configuration
 // TODO(tj): allow dumping logs to stderr on timeout
 // TODO(tj): allow custom format that does not include .fields etc
 // TODO(tj): allow interval flushes
 // TODO(tj): allow explicit Flush() (for Lambda where you have to flush at the end of function)
-
-// index for the current time.
-func index() string {
-	return time.Now().Format("logs-06-01-02")
-}
 
 // Elasticsearch interface.
 type Elasticsearch interface {
@@ -32,6 +26,7 @@ type Elasticsearch interface {
 // Config for handler.
 type Config struct {
 	BufferSize int           // BufferSize is the number of logs to buffer before flush (default: 100)
+	Format     string        // Format for index
 	Client     Elasticsearch // Client for ES
 }
 
@@ -39,6 +34,10 @@ type Config struct {
 func (c *Config) defaults() {
 	if c.BufferSize == 0 {
 		c.BufferSize = 100
+	}
+
+	if c.Format == "" {
+		c.Format = "logs-06-01-02"
 	}
 }
 
@@ -65,8 +64,8 @@ func (h *Handler) HandleLog(e *log.Entry) error {
 
 	if h.batch == nil {
 		h.batch = &batch.Batch{
+			Index:   time.Now().Format(h.Config.Format),
 			Elastic: h.Client,
-			Index:   index(),
 			Type:    "log",
 		}
 	}
