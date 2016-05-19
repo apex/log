@@ -20,10 +20,6 @@ import (
 
 // index for the current time.
 func index(Format string) string {
-	if Format == "" {
-		Format = "logs-06-01-02"
-	}
-
 	return time.Now().Format(Format)
 }
 
@@ -43,6 +39,9 @@ type Config struct {
 func (c *Config) defaults() {
 	if c.BufferSize == 0 {
 		c.BufferSize = 100
+	}
+	if c.Format == "" {
+		c.Format = "logs-06-01-02"
 	}
 }
 
