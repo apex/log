@@ -9,6 +9,7 @@ Package log implements a simple structured logging API inspired by Logrus, desig
 [![GoDoc](https://godoc.org/github.com/apex/log?status.svg)](https://godoc.org/github.com/apex/log)
 ![](https://img.shields.io/badge/license-MIT-blue.svg)
 ![](https://img.shields.io/badge/status-stable-green.svg)
+[![](http://apex.sh/images/badge.svg)](https://apex.sh/ping/)
 
 ---
 
