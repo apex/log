@@ -23,7 +23,7 @@ type Handler struct {
 // Like the Kinesis handler, to configure producer options or pass our own AWS
 // Kinesis client use NewConfig instead
 func New(stream, region string) *Handler {
-	return NewConfig(stream, session.New(), &aws.Config{Region: aws.String("us-west2")})
+	return NewConfig(stream, session.New(), &aws.Config{Region: aws.String(region)})
 }
 
 // NewConfig handler for streaming logs into a firehose Kinesis stream.
