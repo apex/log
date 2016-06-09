@@ -48,7 +48,8 @@ func New(stream, region string) *Handler {
 func NewConfig(streamName string, c client.ConfigProvider, cfgs ...*aws.Config) *Handler {
 	fh := firehose.New(c, cfgs...)
 	return &Handler{
-		producer: fh,
-		gen:      fastuuid.MustNewGenerator(),
+		streamName: streamName,
+		producer:   fh,
+		gen:        fastuuid.MustNewGenerator(),
 	}
 }
