@@ -24,7 +24,6 @@ type Handler struct {
 // Kinesis client use NewConfig instead
 func New(stream, region string) *Handler {
 	return NewConfig(stream, session.New(), &aws.Config{Region: aws.String("us-west2")})
-
 }
 
 // NewConfig handler for streaming logs into a firehose Kinesis stream.
