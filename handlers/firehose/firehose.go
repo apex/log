@@ -22,9 +22,9 @@ type Handler struct {
 // New returns a handler for streaming logs into a firehose Kinesis stream.
 // Like the Kinesis handler, to configure producer options or pass our own AWS
 // Kinesis client use NewConfig instead
-func New(stream, region string) *Handler {
+// func New(stream, region string) *Handler {
 
-}
+// }
 
 // NewConfig handler for streaming logs into a firehose Kinesis stream.
 // random value used as partition key
