@@ -6,7 +6,7 @@ import (
 	// "github.com/apex/log"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/client"
-	// "github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/rogpeppe/fastuuid"
 )
@@ -22,9 +22,10 @@ type Handler struct {
 // New returns a handler for streaming logs into a firehose Kinesis stream.
 // Like the Kinesis handler, to configure producer options or pass our own AWS
 // Kinesis client use NewConfig instead
-// func New(stream, region string) *Handler {
+func New(stream, region string) *Handler {
+	return NewConfig(stream, session.New(), &aws.Config{Region: aws.String("us-west2")})
 
-// }
+}
 
 // NewConfig handler for streaming logs into a firehose Kinesis stream.
 // random value used as partition key
