@@ -1,9 +1,9 @@
 package firehose
 
 import (
-	// "encoding/json"
+	"encoding/json"
 
-	// "github.com/apex/log"
+	"github.com/apex/log"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -17,6 +17,23 @@ type Handler struct {
 	producer   *firehose.Firehose
 	gen        *fastuuid.Generator
 	streamName string
+}
+
+// HandleLog implements log.Handler
+func (h *Handler) HandleLog(e *log.Entry) error {
+	j, err := json.Marshal(e)
+	if err != nil {
+		return err
+	}
+
+	i := &firehose.PutRecordInput{
+		DeliveryStreamName: aws.String(h.streamName),
+		Record: &firehose.Record{
+			Data: j,
+		},
+	}
+	_, err = h.producer.PutRecord(i)
+	return err
 }
 
 // New returns a handler for streaming logs into a firehose Kinesis stream.
