@@ -1,4 +1,6 @@
 
+TESTFLAG ?= -cover
+
 test:
-	@go test -cover ./...
+	@go test $(TESTFLAG) ./...
 .PHONY: test

@@ -11,10 +11,10 @@ import (
 )
 
 func Test(t *testing.T) {
-	mem := memory.New()
+	h := memory.New()
 
 	ctx := log.Logger{
-		Handler: level.New(mem, log.ErrorLevel),
+		Handler: level.New(h, log.ErrorLevel),
 		Level:   log.InfoLevel,
 	}
 
@@ -22,6 +22,6 @@ func Test(t *testing.T) {
 	ctx.Info("world")
 	ctx.Error("boom")
 
-	assert.Len(t, mem.Entries, 1)
-	assert.Equal(t, mem.Entries[0].Message, "boom")
+	assert.Len(t, h.Entries, 1)
+	assert.Equal(t, h.Entries[0].Message, "boom")
 }

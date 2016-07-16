@@ -9,6 +9,9 @@ import (
 // assert interface compliance.
 var _ Interface = (*Entry)(nil)
 
+// Now returns the current time.
+var Now = time.Now
+
 // Entry represents a single log entry.
 type Entry struct {
 	Logger    *Logger   `json:"-"`
@@ -139,6 +142,6 @@ func (e *Entry) finalize(level Level, msg string) *Entry {
 		Fields:    e.mergedFields(),
 		Level:     level,
 		Message:   msg,
-		Timestamp: time.Now(),
+		Timestamp: Now(),
 	}
 }
