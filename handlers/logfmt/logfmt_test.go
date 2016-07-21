@@ -13,7 +13,7 @@ import (
 
 func init() {
 	log.Now = func() time.Time {
-		return time.Unix(0, 0)
+		return time.Unix(0, 0).UTC()
 	}
 }
 
@@ -25,9 +25,9 @@ func Test(t *testing.T) {
 	log.Info("world")
 	log.Error("boom")
 
-	expected := `timestamp=1969-12-31T16:00:00-08:00 level=info message=hello user=tj id=123
-timestamp=1969-12-31T16:00:00-08:00 level=info message=world
-timestamp=1969-12-31T16:00:00-08:00 level=error message=boom
+	expected := `timestamp=1970-01-01T00:00:00Z level=info message=hello user=tj id=123
+timestamp=1970-01-01T00:00:00Z level=info message=world
+timestamp=1970-01-01T00:00:00Z level=error message=boom
 `
 
 	assert.Equal(t, expected, buf.String())
