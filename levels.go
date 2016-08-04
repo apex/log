@@ -2,6 +2,7 @@ package log
 
 import (
 	"errors"
+	"strings"
 )
 
 // Level of severity.
@@ -36,7 +37,7 @@ func (l Level) MarshalJSON() ([]byte, error) {
 
 // ParseLevel parses level string.
 func ParseLevel(s string) (Level, error) {
-	switch s {
+	switch strings.ToLower(s) {
 	case "debug":
 		return DebugLevel, nil
 	case "info":
