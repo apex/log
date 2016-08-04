@@ -21,6 +21,18 @@ func TestParseLevel(t *testing.T) {
 	}
 
 	{
+        level, err := ParseLevel("DEBUG")
+        assert.NoError(t, err)
+        assert.Equal(t, DebugLevel, level)
+    }
+
+    {
+        level, err := ParseLevel("Warning")
+        assert.NoError(t, err)
+        assert.Equal(t, WarnLevel, level)
+    }
+
+	{
 		_, err := ParseLevel("whatever")
 		assert.Error(t, err)
 	}
