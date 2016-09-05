@@ -11,6 +11,7 @@ Package log implements a simple structured logging API inspired by Logrus, desig
 - __memory__ – in-memory handler for tests
 - __discard__ – discards all logs
 - __es__ – Elasticsearch handler
+- __graylog__ – Graylog handler
 - __json__ – JSON output handler
 - __kinesis__ – AWS Kinesis handler
 - __multi__ – fan-out to multiple handlers
