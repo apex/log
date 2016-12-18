@@ -20,7 +20,7 @@ func (a byName) Len() int           { return len(a) }
 func (a byName) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a byName) Less(i, j int) bool { return a[i].Name < a[j].Name }
 
-// handleStdLog outpouts to the stlib lob.
+// handleStdLog outpouts to the stlib log.
 func handleStdLog(e *Entry) error {
 	level := levelNames[e.Level]
 
