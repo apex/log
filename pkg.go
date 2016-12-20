@@ -2,10 +2,12 @@ package log
 
 // singletons ftw?
 var Log Interface = &Logger{
-	Level: InfoLevel,
+	Handler: HandlerFunc(handleStdLog),
+	Level:   InfoLevel,
 }
 
 // SetHandler sets the handler. This is not thread-safe.
+// The default handler outputs to the stdlib log.
 func SetHandler(h Handler) {
 	if logger, ok := Log.(*Logger); ok {
 		logger.Handler = h
