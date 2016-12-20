@@ -52,7 +52,7 @@ type field struct {
 	Value interface{}
 }
 
-// by sorts projects by call count.
+// by sorts fields by name.
 type byName []field
 
 func (a byName) Len() int           { return len(a) }
