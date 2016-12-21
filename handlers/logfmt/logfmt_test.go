@@ -26,7 +26,7 @@ func Test(t *testing.T) {
 	log.Info("world")
 	log.Error("boom")
 
-	expected := `timestamp=1970-01-01T00:00:00Z level=info message=hello user=tj id=123
+	expected := `timestamp=1970-01-01T00:00:00Z level=info message=hello id=123 user=tj
 timestamp=1970-01-01T00:00:00Z level=info message=world
 timestamp=1970-01-01T00:00:00Z level=error message=boom
 `
