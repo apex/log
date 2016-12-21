@@ -6,17 +6,17 @@ Package log implements a simple structured logging API inspired by Logrus, desig
 ## Handlers
 
 - __cli__ – human-friendly CLI output
-- __text__ – human-friendly colored output
-- __logfmt__ – logfmt plain-text formatter
-- __memory__ – in-memory handler for tests
 - __discard__ – discards all logs
 - __es__ – Elasticsearch handler
 - __graylog__ – Graylog handler
-- __papertrail__ – Papertrail handler
 - __json__ – JSON output handler
 - __kinesis__ – AWS Kinesis handler
-- __multi__ – fan-out to multiple handlers
 - __level__ – level filter handler
+- __logfmt__ – logfmt plain-text formatter
+- __memory__ – in-memory handler for tests
+- __multi__ – fan-out to multiple handlers
+- __papertrail__ – Papertrail handler
+- __text__ – human-friendly colored output
 
 ## Badges
 
