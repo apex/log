@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"sort"
 	"sync"
 	"time"
 
@@ -46,19 +45,6 @@ var Strings = [...]string{
 	log.FatalLevel: "FATAL",
 }
 
-// field used for sorting.
-type field struct {
-	Name  string
-	Value interface{}
-}
-
-// by sorts fields by name.
-type byName []field
-
-func (a byName) Len() int           { return len(a) }
-func (a byName) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a byName) Less(i, j int) bool { return a[i].Name < a[j].Name }
-
 // Handler implementation.
 type Handler struct {
 	mu     sync.Mutex
@@ -76,14 +62,7 @@ func New(w io.Writer) *Handler {
 func (h *Handler) HandleLog(e *log.Entry) error {
 	color := Colors[e.Level]
 	level := Strings[e.Level]
-
-	var fields []field
-
-	for k, v := range e.Fields {
-		fields = append(fields, field{k, v})
-	}
-
-	sort.Sort(byName(fields))
+	names := e.Fields.Names()
 
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -91,8 +70,8 @@ func (h *Handler) HandleLog(e *log.Entry) error {
 	ts := time.Since(start) / time.Second
 	fmt.Fprintf(h.Writer, "\033[%dm%6s\033[0m[%04d] %-25s", color, level, ts, e.Message)
 
-	for _, f := range fields {
-		fmt.Fprintf(h.Writer, " \033[%dm%s\033[0m=%v", color, f.Name, f.Value)
+	for _, name := range names {
+		fmt.Fprintf(h.Writer, " \033[%dm%s\033[0m=%v", color, name, e.Fields.Get(name))
 	}
 
 	fmt.Fprintln(h.Writer)

@@ -1,6 +1,9 @@
 package log
 
-import stdlog "log"
+import (
+	stdlog "log"
+	"sort"
+)
 
 // assert interface compliance.
 var _ Interface = (*Logger)(nil)
@@ -16,6 +19,21 @@ type Fields map[string]interface{}
 // Fields implements Fielder.
 func (f Fields) Fields() Fields {
 	return f
+}
+
+// Get field value by name.
+func (f Fields) Get(name string) interface{} {
+	return f[name]
+}
+
+// Names returns field names sorted.
+func (f Fields) Names() (v []string) {
+	for k := range f {
+		v = append(v, k)
+	}
+
+	sort.Strings(v)
+	return
 }
 
 // The HandlerFunc type is an adapter to allow the use of ordinary functions as
