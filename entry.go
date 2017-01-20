@@ -48,6 +48,9 @@ func (e *Entry) WithField(key string, value interface{}) *Entry {
 
 // WithError returns a new entry with the "error" set to `err`.
 func (e *Entry) WithError(err error) *Entry {
+	if err == nil {
+		return e.WithField("error", err)
+	}
 	return e.WithField("error", err.Error())
 }
 
