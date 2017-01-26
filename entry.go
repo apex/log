@@ -63,11 +63,7 @@ func (e *Entry) WithError(err error) *Entry {
 			file = parts[1]
 		}
 
-		ctx = ctx.WithFields(Fields{
-			"function": name,
-			"filename": file,
-			"line":     line,
-		})
+		ctx = ctx.WithField("source", fmt.Sprintf("%s: %s:%s", name, file, line))
 	}
 
 	return ctx
