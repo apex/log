@@ -3,6 +3,7 @@ package log
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -48,7 +49,28 @@ func (e *Entry) WithField(key string, value interface{}) *Entry {
 
 // WithError returns a new entry with the "error" set to `err`.
 func (e *Entry) WithError(err error) *Entry {
-	return e.WithField("error", err.Error())
+	ctx := e.WithField("error", err.Error())
+
+	if s, ok := err.(stackTracer); ok {
+		frame := s.StackTrace()[0]
+
+		name := fmt.Sprintf("%n", frame)
+		file := fmt.Sprintf("%+s", frame)
+		line := fmt.Sprintf("%d", frame)
+
+		parts := strings.Split(file, "\n\t")
+		if len(parts) > 1 {
+			file = parts[1]
+		}
+
+		ctx = ctx.WithFields(Fields{
+			"function": name,
+			"filename": file,
+			"line":     line,
+		})
+	}
+
+	return ctx
 }
 
 // Debug level message.
