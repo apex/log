@@ -16,6 +16,7 @@ Package log implements a simple structured logging API inspired by Logrus, desig
 - __memory__ – in-memory handler for tests
 - __multi__ – fan-out to multiple handlers
 - __papertrail__ – Papertrail handler
+- __rule__ - custom rule handler
 - __text__ – human-friendly colored output
 
 ## Badges
