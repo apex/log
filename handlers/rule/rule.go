@@ -30,7 +30,7 @@ func New(next log.Handler, rules ...Rule) *ruleHandler {
 }
 
 // Helper function that merges a set of Rules, returning a Rule which is
-// satisfied if at least one of underlying Rules is satisified.
+// satisfied if at least one of underlying Rules is satisfied.
 func Or(rules ...Rule) Rule {
 	return func(entry *log.Entry) bool {
 		for _, rule := range rules {
