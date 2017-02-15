@@ -72,6 +72,10 @@ func (h *Handler) HandleLog(e *log.Entry) error {
 	fmt.Fprintf(h.Writer, "\033[%dm%*s\033[0m %-25s", color, h.Padding+1, level, e.Message)
 
 	for _, name := range names {
+		if name == "source" {
+			continue
+		}
+
 		fmt.Fprintf(h.Writer, " \033[%dm%s\033[0m=%v", color, name, e.Fields.Get(name))
 	}
 
