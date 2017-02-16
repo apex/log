@@ -52,3 +52,13 @@ func ParseLevel(s string) (Level, error) {
 		return -1, errors.New("invalid level")
 	}
 }
+
+// MustParseLevel parses level string or panics.
+func MustParseLevel(s string) Level {
+	l, err := ParseLevel(s)
+	if err != nil {
+		panic("invalid log level")
+	}
+
+	return l
+}
