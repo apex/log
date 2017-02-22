@@ -67,6 +67,9 @@ func (l *Logger) WithFields(fields Fielder) *Entry {
 }
 
 // WithField returns a new entry with the `key` and `value` set.
+//
+// Note that the `key` should not have spaces in it - use camel
+// case or underscores
 func (l *Logger) WithField(key string, value interface{}) *Entry {
 	return NewEntry(l).WithField(key, value)
 }
