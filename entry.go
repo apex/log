@@ -48,6 +48,9 @@ func (e *Entry) WithField(key string, value interface{}) *Entry {
 }
 
 // WithError returns a new entry with the "error" set to `err`.
+//
+// The given error may implement .Fielder, if it does the method
+// will add all its `.Fields()` into the returned entry.
 func (e *Entry) WithError(err error) *Entry {
 	ctx := e.WithField("error", err.Error())
 
@@ -64,6 +67,10 @@ func (e *Entry) WithError(err error) *Entry {
 		}
 
 		ctx = ctx.WithField("source", fmt.Sprintf("%s: %s:%s", name, file, line))
+	}
+
+	if f, ok := err.(Fielder); ok {
+		ctx = ctx.WithFields(f.Fields())
 	}
 
 	return ctx
