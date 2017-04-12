@@ -142,6 +142,9 @@ func (l *Logger) log(level Level, e *Entry, msg string) {
 	if level < l.Level {
 		return
 	}
+	if l.Handler == nil {
+		return
+	}
 
 	if err := l.Handler.HandleLog(e.finalize(level, msg)); err != nil {
 		stdlog.Printf("error logging: %s", err)
