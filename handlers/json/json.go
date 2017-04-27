@@ -15,14 +15,14 @@ var Default = New(os.Stderr)
 
 // Handler implementation.
 type Handler struct {
-	mu  sync.Mutex
-	enc *j.Encoder
+	*j.Encoder
+	mu sync.Mutex
 }
 
 // New handler.
 func New(w io.Writer) *Handler {
 	return &Handler{
-		enc: j.NewEncoder(w),
+		Encoder: j.NewEncoder(w),
 	}
 }
 
@@ -30,5 +30,5 @@ func New(w io.Writer) *Handler {
 func (h *Handler) HandleLog(e *log.Entry) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	return h.enc.Encode(e)
+	return h.Encoder.Encode(e)
 }
