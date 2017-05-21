@@ -21,6 +21,13 @@ func SetLevel(l Level) {
 	}
 }
 
+// SetLevelFromString sets the log level from a string, panicing when invalid. This is not thread-safe.
+func SetLevelFromString(s string) {
+	if logger, ok := Log.(*Logger); ok {
+		logger.Level = MustParseLevel(s)
+	}
+}
+
 // WithFields returns a new entry with `fields` set.
 func WithFields(fields Fielder) *Entry {
 	return Log.WithFields(fields)
