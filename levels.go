@@ -14,7 +14,8 @@ type Level int
 
 // Log levels.
 const (
-	DebugLevel Level = iota
+	InvalidLevel Level = iota - 1
+	DebugLevel
 	InfoLevel
 	WarnLevel
 	ErrorLevel
@@ -63,7 +64,7 @@ func (l *Level) UnmarshalJSON(b []byte) error {
 func ParseLevel(s string) (Level, error) {
 	l, ok := levelStrings[strings.ToLower(s)]
 	if !ok {
-		return -1, ErrInvalidLevel
+		return InvalidLevel, ErrInvalidLevel
 	}
 
 	return l, nil

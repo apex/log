@@ -11,13 +11,14 @@ func TestParseLevel(t *testing.T) {
 	cases := []struct {
 		String string
 		Level  Level
+		Num    int
 	}{
-		{"debug", DebugLevel},
-		{"info", InfoLevel},
-		{"warn", WarnLevel},
-		{"warning", WarnLevel},
-		{"error", ErrorLevel},
-		{"fatal", FatalLevel},
+		{"debug", DebugLevel, 0},
+		{"info", InfoLevel, 1},
+		{"warn", WarnLevel, 2},
+		{"warning", WarnLevel, 3},
+		{"error", ErrorLevel, 4},
+		{"fatal", FatalLevel, 5},
 	}
 
 	for _, c := range cases {
@@ -27,6 +28,12 @@ func TestParseLevel(t *testing.T) {
 			assert.Equal(t, c.Level, l)
 		})
 	}
+
+	t.Run("invalid", func(t *testing.T) {
+		l, err := ParseLevel("something")
+		assert.Equal(t, ErrInvalidLevel, err)
+		assert.Equal(t, InvalidLevel, l)
+	})
 }
 
 func TestLevel_MarshalJSON(t *testing.T) {
