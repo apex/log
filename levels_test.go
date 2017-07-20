@@ -8,33 +8,23 @@ import (
 )
 
 func TestParseLevel(t *testing.T) {
-	{
-		level, err := ParseLevel("info")
-		assert.NoError(t, err)
-		assert.Equal(t, InfoLevel, level)
+	cases := []struct {
+		String string
+		Level  Level
+	}{
+		{"debug", DebugLevel},
+		{"info", InfoLevel},
+		{"warn", WarnLevel},
+		{"error", ErrorLevel},
+		{"fatal", FatalLevel},
 	}
 
-	{
-		level, err := ParseLevel("warn")
-		assert.NoError(t, err)
-		assert.Equal(t, WarnLevel, level)
-	}
-
-	{
-        level, err := ParseLevel("DEBUG")
-        assert.NoError(t, err)
-        assert.Equal(t, DebugLevel, level)
-    }
-
-    {
-        level, err := ParseLevel("Warning")
-        assert.NoError(t, err)
-        assert.Equal(t, WarnLevel, level)
-    }
-
-	{
-		_, err := ParseLevel("whatever")
-		assert.Error(t, err)
+	for _, c := range cases {
+		t.Run(c.String, func(t *testing.T) {
+			l, err := ParseLevel(c.String)
+			assert.NoError(t, err, "parse")
+			assert.Equal(t, c.Level, l)
+		})
 	}
 }
 
