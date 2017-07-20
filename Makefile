@@ -1,6 +1,2 @@
 
-TESTFLAG ?= -cover
-
-test:
-	@go test $(TESTFLAG) ./...
-.PHONY: test
+include github.com/tj/make/golang
