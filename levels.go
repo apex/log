@@ -1,6 +1,7 @@
 package log
 
 import (
+	"bytes"
 	"errors"
 	"strings"
 )
@@ -25,14 +26,25 @@ var levelNames = [...]string{
 	FatalLevel: "fatal",
 }
 
-// String implements io.Stringer.
+// String implementation.
 func (l Level) String() string {
 	return levelNames[l]
 }
 
-// MarshalJSON returns the level string.
+// MarshalJSON implementation.
 func (l Level) MarshalJSON() ([]byte, error) {
 	return []byte(`"` + l.String() + `"`), nil
+}
+
+// UnmarshalJSON implementation.
+func (l *Level) UnmarshalJSON(b []byte) error {
+	v, err := ParseLevel(string(bytes.Trim(b, `"`)))
+	if err != nil {
+		return err
+	}
+
+	*l = v
+	return nil
 }
 
 // ParseLevel parses level string.
