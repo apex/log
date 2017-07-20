@@ -6,6 +6,9 @@ import (
 	"strings"
 )
 
+// ErrInvalidLevel is returned if the severity level is invalid.
+var ErrInvalidLevel = errors.New("invalid level")
+
 // Level of severity.
 type Level int
 
@@ -61,7 +64,7 @@ func ParseLevel(s string) (Level, error) {
 	case "fatal":
 		return FatalLevel, nil
 	default:
-		return -1, errors.New("invalid level")
+		return -1, ErrInvalidLevel
 	}
 }
 
