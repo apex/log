@@ -29,6 +29,15 @@ var levelNames = [...]string{
 	FatalLevel: "fatal",
 }
 
+var levelStrings = map[string]Level{
+	"debug":   DebugLevel,
+	"info":    InfoLevel,
+	"warn":    WarnLevel,
+	"warning": WarnLevel,
+	"error":   ErrorLevel,
+	"fatal":   FatalLevel,
+}
+
 // String implementation.
 func (l Level) String() string {
 	return levelNames[l]
@@ -52,20 +61,12 @@ func (l *Level) UnmarshalJSON(b []byte) error {
 
 // ParseLevel parses level string.
 func ParseLevel(s string) (Level, error) {
-	switch strings.ToLower(s) {
-	case "debug":
-		return DebugLevel, nil
-	case "info":
-		return InfoLevel, nil
-	case "warn", "warning":
-		return WarnLevel, nil
-	case "error":
-		return ErrorLevel, nil
-	case "fatal":
-		return FatalLevel, nil
-	default:
+	l, ok := levelStrings[strings.ToLower(s)]
+	if !ok {
 		return -1, ErrInvalidLevel
 	}
+
+	return l, nil
 }
 
 // MustParseLevel parses level string or panics.
