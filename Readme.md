@@ -17,6 +17,7 @@ Package log implements a simple structured logging API inspired by Logrus, desig
 - __multi__ – fan-out to multiple handlers
 - __papertrail__ – Papertrail handler
 - __text__ – human-friendly colored output
+- __delta__ – outputs the delta between log calls and spinner
 
 ---
 
