@@ -137,9 +137,9 @@ func (h *Handler) render(e *log.Entry, done bool) {
 
 	// delta and spinner
 	if done {
-		fmt.Fprintf(h.w, "\r     %7s", time.Since(h.start).Round(time.Millisecond))
+		fmt.Fprintf(h.w, "\r     %-7s", time.Since(h.start).Round(time.Millisecond))
 	} else {
-		fmt.Fprintf(h.w, "\r   %s %7s", h.spin.Current(), time.Since(h.start).Round(time.Millisecond))
+		fmt.Fprintf(h.w, "\r   %s %-7s", h.spin.Current(), time.Since(h.start).Round(time.Millisecond))
 	}
 
 	// message
