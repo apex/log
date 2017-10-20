@@ -98,3 +98,8 @@ func Fatalf(msg string, v ...interface{}) {
 func Trace(msg string) *Entry {
 	return Log.Trace(msg)
 }
+
+// Flush fn
+func Flush() {
+	Log.(Flusher).Flush()
+}

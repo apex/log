@@ -26,33 +26,36 @@ type Config struct {
 	// Application settings
 	Hostname string // Hostname value
 	Tag      string // Tag value
+
+	// Conn (used for testing)
+	Conn net.Conn
 }
 
 // Handler implementation.
 type Handler struct {
 	*Config
 
-	mu   sync.Mutex
-	conn net.Conn
+	mu sync.Mutex
 }
 
 // New handler.
 func New(config *Config) *Handler {
-	conn, err := net.Dial("udp", fmt.Sprintf("%s.papertrailapp.com:%d", config.Host, config.Port))
-	if err != nil {
-		panic(err)
+	if config.Conn == nil {
+		c, err := net.Dial("udp", fmt.Sprintf("%s.papertrailapp.com:%d", config.Host, config.Port))
+		if err != nil {
+			panic(err)
+		}
+		config.Conn = c
 	}
 
 	return &Handler{
 		Config: config,
-		conn:   conn,
 	}
 }
 
 // HandleLog implements log.Handler.
 func (h *Handler) HandleLog(e *log.Entry) error {
-	ts := time.Now().Format(time.Stamp)
-
+	ts := log.Now().Format(time.Stamp)
 	var buf bytes.Buffer
 
 	enc := logfmt.NewEncoder(&buf)
@@ -68,8 +71,12 @@ func (h *Handler) HandleLog(e *log.Entry) error {
 	msg := []byte(fmt.Sprintf("<%d>%s %s %s[%d]: %s\n", syslog.LOG_KERN, ts, h.Hostname, h.Tag, os.Getpid(), buf.String()))
 
 	h.mu.Lock()
-	_, err := h.conn.Write(msg)
+	_, err := h.Config.Conn.Write(msg)
 	h.mu.Unlock()
-
 	return err
+}
+
+// Flush fn
+func (h *Handler) Flush() {
+	log.Infof("flushing!!!")
 }

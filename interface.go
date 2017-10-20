@@ -17,3 +17,8 @@ type Interface interface {
 	Fatalf(msg string, v ...interface{})
 	Trace(msg string) *Entry
 }
+
+// Flusher interface
+type Flusher interface {
+	Flush()
+}

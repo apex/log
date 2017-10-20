@@ -135,6 +135,13 @@ func (l *Logger) Trace(msg string) *Entry {
 	return NewEntry(l).Trace(msg)
 }
 
+// Flush logs if the handler implements them
+func (l *Logger) Flush() {
+	if f, ok := l.Handler.(Flusher); ok {
+		f.Flush()
+	}
+}
+
 // log the message, invoking the handler. We clone the entry here
 // to bypass the overhead in Entry methods when the level is not
 // met.
