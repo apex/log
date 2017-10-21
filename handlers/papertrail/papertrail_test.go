@@ -2,7 +2,7 @@ package papertrail_test
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"testing"
 	"time"
@@ -19,30 +19,43 @@ func init() {
 
 func TestPapertrail(t *testing.T) {
 	server, client := net.Pipe()
-	res := make(chan []byte, 1)
+	res := make(chan []byte, 20)
 
+	// little server that reads 16 bytes at a time
 	go func() {
-		buf, e := ioutil.ReadAll(server)
-		if e != nil {
-			t.Fatal(e)
+		for {
+			buf := make([]byte, 16)
+			n, e := server.Read(buf)
+			fmt.Printf("read %d bytes\n", n)
+			time.Sleep(600 * time.Millisecond)
+			if e != nil {
+				fmt.Printf("error %s with buf %s (%d bytes)\n", e.Error(), buf, n)
+				if e == io.EOF {
+					close(res)
+					break
+				}
+				t.Fatal(e)
+			}
+			res <- buf
 		}
-		res <- buf
-		server.Close()
 	}()
 
 	pt := papertrail.New(&papertrail.Config{
-		Host: "host",
-		Port: 8080,
-		Conn: client,
+		Host:   "host",
+		Port:   8080,
+		Writer: client,
 	})
 
 	log.SetHandler(pt)
-	log.WithField("user", "tj").WithField("id", "123").Info("hello")
-	log.WithField("user", "tj").WithField("id", "123").Info("hello")
-	log.WithField("user", "tj").WithField("id", "123").Info("hello")
+	log.Infof("a")
+	log.Infof("b")
 	log.Flush()
-
+	fmt.Println("Flushed...")
 	client.Close()
-	buf := <-res
-	fmt.Printf("%s", buf)
+	var full []byte
+	for b := range res {
+		full = append(full, b...)
+	}
+
+	fmt.Printf("%s", full)
 }

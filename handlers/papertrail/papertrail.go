@@ -4,6 +4,7 @@ package papertrail
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"log/syslog"
 	"net"
 	"os"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"github.com/apex/log"
+	"github.com/apex/log/buffer"
 	"github.com/go-logfmt/logfmt"
 )
 
@@ -27,25 +29,30 @@ type Config struct {
 	Hostname string // Hostname value
 	Tag      string // Tag value
 
-	// Conn (used for testing)
-	Conn net.Conn
+	// Provide your own buffer
+	Buffer *buffer.Buffer
+
+	// Provide your own writer (useful for testing)
+	Writer io.Writer
 }
 
 // Handler implementation.
 type Handler struct {
 	*Config
-
-	mu sync.Mutex
 }
 
 // New handler.
 func New(config *Config) *Handler {
-	if config.Conn == nil {
-		c, err := net.Dial("udp", fmt.Sprintf("%s.papertrailapp.com:%d", config.Host, config.Port))
+	if config.Writer == nil {
+		c, err := newClient(fmt.Sprintf("%s.papertrailapp.com:%d", config.Host, config.Port))
 		if err != nil {
 			panic(err)
 		}
-		config.Conn = c
+		config.Writer = c
+	}
+
+	if config.Buffer == nil {
+		config.Buffer = buffer.New(config.Writer)
 	}
 
 	return &Handler{
@@ -69,14 +76,72 @@ func (h *Handler) HandleLog(e *log.Entry) error {
 	enc.EndRecord()
 
 	msg := []byte(fmt.Sprintf("<%d>%s %s %s[%d]: %s\n", syslog.LOG_KERN, ts, h.Hostname, h.Tag, os.Getpid(), buf.String()))
-
-	h.mu.Lock()
-	_, err := h.Config.Conn.Write(msg)
-	h.mu.Unlock()
-	return err
+	h.Buffer.Append(msg)
+	return nil
 }
 
 // Flush fn
 func (h *Handler) Flush() {
-	log.Infof("flushing!!!")
+	h.Buffer.Flush()
+}
+
+type client struct {
+	url  string
+	conn net.Conn
+	mu   sync.Mutex
+}
+
+func newClient(url string) (*client, error) {
+	c := &client{url: url}
+
+	// make an initial connection (this will be long-lived)
+	if e := c.connect(); e != nil {
+		return nil, e
+	}
+
+	return c, nil
+}
+
+func (c *client) connect() error {
+	if c.conn != nil {
+		// ignore err from close, it makes sense to continue anyway
+		c.conn.Close()
+		c.conn = nil
+	}
+
+	conn, e := net.Dial("tcp", c.url)
+	if e != nil {
+		return e
+	}
+
+	c.conn = conn
+	return nil
+}
+
+func (c *client) close() error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.conn != nil {
+		err := c.conn.Close()
+		c.conn = nil
+		return err
+	}
+	return nil
+}
+
+func (c *client) Write(b []byte) (int, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.conn != nil {
+		if n, err := c.conn.Write(b); err == nil {
+			return n, err
+		}
+	}
+	if err := c.connect(); err != nil {
+		return 0, err
+	}
+
+	return c.conn.Write(b)
 }
