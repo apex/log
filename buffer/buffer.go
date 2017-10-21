@@ -177,6 +177,7 @@ func (b *Buffer) flush(buf []byte) {
 	select {
 	case b.writec <- &request{buf: buf}:
 	default:
+		stdlog.Printf("log/buffer: dropping buffer '%s'", buf)
 		// drop the request
 	}
 }
