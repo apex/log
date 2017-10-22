@@ -29,7 +29,7 @@ type Config struct {
 	Hostname string // Hostname value
 	Tag      string // Tag value
 
-	// Provide your own buffer
+	// Optionally provide your own buffer
 	Buffer *buffer.Buffer
 
 	// Provide your own writer (useful for testing)
@@ -44,7 +44,7 @@ type Handler struct {
 // New handler.
 func New(config *Config) *Handler {
 	if config.Writer == nil {
-		c, err := newClient(fmt.Sprintf("%s.papertrailapp.com:%d", config.Host, config.Port))
+		c, err := Client(fmt.Sprintf("%s.papertrailapp.com:%d", config.Host, config.Port))
 		if err != nil {
 			panic(err)
 		}
@@ -91,7 +91,11 @@ type client struct {
 	mu   sync.Mutex
 }
 
-func newClient(url string) (*client, error) {
+// This client is based on the syslog client here:
+// https://golang.org/src/log/syslog/syslog.go
+//
+// TODO: should this be a long-lived TCP connection?
+func Client(url string) (*client, error) {
 	c := &client{url: url}
 
 	// make an initial connection (this will be long-lived)
@@ -109,11 +113,22 @@ func (c *client) connect() error {
 		c.conn = nil
 	}
 
-	conn, e := net.Dial("tcp", c.url)
+	addr, e := net.ResolveTCPAddr("tcp", c.url)
 	if e != nil {
 		return e
 	}
 
+	conn, e := net.DialTCP("tcp", nil, addr)
+	if e != nil {
+		return e
+	}
+	if e := conn.SetWriteBuffer(1); e != nil {
+		return e
+	}
+	if e := conn.SetReadBuffer(1); e != nil {
+		return e
+	}
+	conn.SetNoDelay(true)
 	c.conn = conn
 	return nil
 }
@@ -130,18 +145,29 @@ func (c *client) close() error {
 	return nil
 }
 
+// Writer that will first try writing, then
+// if that fails, try reconnecting the TCP
+// connection and writing again.
+
+// Failures will be retried by the buffer,
+// so we need to keep track of what's already
+// been written.
 func (c *client) Write(b []byte) (int, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
+	var written int
 	if c.conn != nil {
 		if n, err := c.conn.Write(b); err == nil {
-			return n, err
+			fmt.Printf("n written %d\n", n)
+			return n, nil
+		} else if n > 0 {
+			written = n
 		}
 	}
 	if err := c.connect(); err != nil {
-		return 0, err
+		return written, err
 	}
 
-	return c.conn.Write(b)
+	return c.conn.Write(b[written:])
 }

@@ -2,60 +2,78 @@ package papertrail_test
 
 import (
 	"fmt"
-	"io"
 	"net"
 	"testing"
-	"time"
-
-	"github.com/apex/log"
-	"github.com/apex/log/handlers/papertrail"
 )
 
-func init() {
-	log.Now = func() time.Time {
-		return time.Unix(0, 0)
+func newPipe(t *testing.T) (client, server net.Conn) {
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
 	}
+
+	go func() {
+		defer ln.Close()
+		s, err := ln.Accept()
+		if err != nil {
+			t.Fatal(err)
+		}
+		server = s
+	}()
+
+	client, err = net.Dial("tcp", ln.Addr().String())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return client, server
 }
 
-func TestPapertrail(t *testing.T) {
-	server, client := net.Pipe()
-	res := make(chan []byte, 20)
+func TestFlakyPapertrail(t *testing.T) {
+	addr, err := net.ResolveTCPAddr("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	// little server that reads 16 bytes at a time
+	ln, err := net.ListenTCP("tcp", addr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ln.Close()
+
+	// mock papertrail server
 	go func() {
 		for {
-			buf := make([]byte, 16)
-			n, e := server.Read(buf)
-			fmt.Printf("read %d bytes\n", n)
-			time.Sleep(600 * time.Millisecond)
+			s, e := ln.AcceptTCP()
 			if e != nil {
-				fmt.Printf("error %s with buf %s (%d bytes)\n", e.Error(), buf, n)
-				if e == io.EOF {
-					close(res)
-					break
-				}
 				t.Fatal(e)
 			}
-			res <- buf
+
+			buf := make([]byte, 1)
+			if n, e := s.Read(buf); e != nil {
+				t.Fatal(e)
+			} else {
+				fmt.Printf("read %d bytes\n", n)
+			}
+
+			s.Close()
 		}
 	}()
 
-	pt := papertrail.New(&papertrail.Config{
-		Host:   "host",
-		Port:   8080,
-		Writer: client,
-	})
-
-	log.SetHandler(pt)
-	log.Infof("a")
-	log.Infof("b")
-	log.Flush()
-	fmt.Println("Flushed...")
-	client.Close()
-	var full []byte
-	for b := range res {
-		full = append(full, b...)
+	// make the connection to our little server
+	raddr, err := net.ResolveTCPAddr("tcp", ln.Addr().String())
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	fmt.Printf("%s", full)
+	client, e := net.DialTCP("tcp", nil, raddr)
+	if e != nil {
+		t.Fatal(e)
+	}
+
+	if n, e := client.Write([]byte("hi world!")); e != nil {
+		fmt.Printf("error writing %s\n", e)
+	} else {
+		fmt.Printf("wrote %d bytes\n", n)
+	}
 }

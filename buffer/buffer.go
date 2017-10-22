@@ -37,7 +37,10 @@ type request struct {
 
 // New buffer. This buffer never blocks on writes but may drop
 // logs if the receiver is either down or too slow. It will also
-// flush during idle periods
+// flush during idle periods.
+//
+// The writer should be prepared to be called multiple times
+// with the same data or a slice of the original data.
 func New(writer io.Writer) *Buffer {
 	return NewWithConfig(writer, &Config{
 		BufferSize:     1028,
@@ -107,18 +110,21 @@ func (b *Buffer) write() {
 		for len(buf) > 0 {
 			n, e := b.w.Write(buf)
 
-			// done writing
-			if e == nil && len(buf) == n {
+			if e != nil {
+				stdlog.Printf("log/buffer: error writing buffer '%s'", e)
+			} else if len(buf) == n {
+				break // done writing
+			}
+
+			retries--
+			if retries <= 0 {
+				if len(buf) > 0 {
+					stdlog.Printf("log/buffer: dropping buffer after writes failed %d times '%s'", b.c.RetryWrites, buf)
+				}
 				break
 			}
 
 			buf = buf[n:]
-			retries--
-
-			if retries <= 0 {
-				stdlog.Printf("log/buffer: error writing buffer '%s'", buf)
-				break
-			}
 		}
 
 		// ack that we've drained
@@ -131,7 +137,8 @@ func (b *Buffer) write() {
 }
 
 // Append to the buffer. This will periodically flush
-// depending on the buffer size. This will never block.
+// depending on the buffer size. This won't block,
+// unless behind a buffer.Flush.
 func (b *Buffer) Append(msg []byte) {
 	b.cmdc <- func() {
 		b.buf = append(b.buf, msg...)
@@ -145,9 +152,9 @@ func (b *Buffer) Append(msg []byte) {
 }
 
 // Flush the buffer manually. This will block until
-// the writes have finished. This will also block
-// writes following this call so you'll probably
-// want to call this at the end
+// the writes have drained. This will also block
+// appends following this call so you'll probably
+// want to call this at the end.
 func (b *Buffer) Flush() {
 	drainc := make(chan bool)
 	b.cmdc <- func() {
@@ -177,7 +184,7 @@ func (b *Buffer) flush(buf []byte) {
 	select {
 	case b.writec <- &request{buf: buf}:
 	default:
-		stdlog.Printf("log/buffer: dropping buffer '%s'", buf)
+		stdlog.Printf("log/buffer: writer is too slow or unavailable. dropping buffer '%s'", buf)
 		// drop the request
 	}
 }

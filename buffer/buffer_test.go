@@ -214,3 +214,27 @@ func TestLeaky(t *testing.T) {
 	buf.Flush()
 	assert.Equal(t, "abcdef", w.String())
 }
+
+type ErrorWriter struct {
+	Retries int
+	buf     bytes.Buffer
+}
+
+func (s *ErrorWriter) Write(b []byte) (int, error) {
+	s.Retries++
+	return len(b), errors.New("error")
+}
+
+func (s *ErrorWriter) String() string {
+	return s.buf.String()
+}
+func TestNoRetry(t *testing.T) {
+	w := ErrorWriter{}
+	buf := buffer.New(&w)
+	buf.Append([]byte("ab"))
+	buf.Append([]byte("cd"))
+	buf.Append([]byte("ef"))
+	buf.Flush()
+	assert.Equal(t, "", w.String())
+	assert.Equal(t, 1, w.Retries)
+}
