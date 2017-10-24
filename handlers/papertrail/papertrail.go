@@ -3,16 +3,16 @@ package papertrail
 
 import (
 	"bytes"
+	"crypto/tls"
 	"fmt"
-	"io"
+	stdlog "log"
 	"log/syslog"
 	"net"
 	"os"
-	"sync"
 	"time"
 
 	"github.com/apex/log"
-	"github.com/apex/log/buffer"
+	"github.com/apex/log/internal/queue"
 	"github.com/go-logfmt/logfmt"
 )
 
@@ -29,34 +29,56 @@ type Config struct {
 	Hostname string // Hostname value
 	Tag      string // Tag value
 
-	// Optionally provide your own buffer
-	Buffer *buffer.Buffer
-
-	// Provide your own writer (useful for testing)
-	Writer io.Writer
+	// Advanced: tweak how we send logs to papertrail
+	// Capacity is the amount of log to queue before
+	// we start dropping, write timeout dictates how
+	// long we should wait before giving up on a write
+	Capacity       int
+	ConnectTimeout time.Duration
+	WriteTimeout   time.Duration
 }
 
 // Handler implementation.
 type Handler struct {
-	*Config
+	url  string
+	c    *Config
+	conn net.Conn
+	q    *queue.Queue
 }
 
 // New handler.
 func New(config *Config) *Handler {
-	if config.Writer == nil {
-		c, err := Client(fmt.Sprintf("%s.papertrailapp.com:%d", config.Host, config.Port))
-		if err != nil {
-			panic(err)
-		}
-		config.Writer = c
+
+	// defaults
+	// TODO: what should these be?
+	if config.Capacity == 0 {
+		config.Capacity = 20
+	}
+	if config.ConnectTimeout == 0 {
+		config.ConnectTimeout = 30 * time.Second
+	}
+	if config.WriteTimeout == 0 {
+		config.WriteTimeout = 5 * time.Second
 	}
 
-	if config.Buffer == nil {
-		config.Buffer = buffer.New(config.Writer)
+	// connect to papertrail
+	url := fmt.Sprintf("%s.papertrailapp.com:%d", config.Host, config.Port)
+	conn, err := connect(url, config.ConnectTimeout)
+	if err != nil {
+		// TODO: should we kill here?
+		stdlog.Printf("log/papertrail: couldn't connect to papertrail")
 	}
+
+	// TODO: see if papertrail can handle out of order
+	// logs. if so, we can make our write function
+	// thread-safe & adjust the concurrency here
+	q := queue.New(config.Capacity, 1)
 
 	return &Handler{
-		Config: config,
+		c:    config,
+		conn: conn,
+		url:  url,
+		q:    q,
 	}
 }
 
@@ -68,106 +90,74 @@ func (h *Handler) HandleLog(e *log.Entry) error {
 	enc := logfmt.NewEncoder(&buf)
 	enc.EncodeKeyval("level", e.Level.String())
 	enc.EncodeKeyval("message", e.Message)
-
 	for k, v := range e.Fields {
 		enc.EncodeKeyval(k, v)
 	}
-
 	enc.EndRecord()
 
-	msg := []byte(fmt.Sprintf("<%d>%s %s %s[%d]: %s\n", syslog.LOG_KERN, ts, h.Hostname, h.Tag, os.Getpid(), buf.String()))
-	h.Buffer.Append(msg)
+	msg := []byte(fmt.Sprintf("<%d>%s %s %s[%d]: %s\n",
+		syslog.LOG_KERN,
+		ts,
+		h.c.Hostname,
+		h.c.Tag,
+		os.Getpid(),
+		buf.String(),
+	))
+
+	return h.q.Push(func() {
+		if e := h.write(msg); e != nil {
+			stdlog.Printf("log/papertrail: %s", e)
+		}
+	})
+}
+
+// connect to papertrail
+// based on: https://github.com/papertrail/remote_syslog2/blob/master/syslog/syslog.go
+func connect(url string, connectTimeout time.Duration) (net.Conn, error) {
+	config := &tls.Config{
+		RootCAs: certpool(),
+	}
+	dialer := &net.Dialer{
+		Timeout:   connectTimeout,
+		KeepAlive: time.Second * 60 * 3, // 3 minutes
+	}
+	return tls.DialWithDialer(dialer, "tcp", url, config)
+}
+
+// write the data to the connection
+// this is not thread-safe
+func (h *Handler) write(b []byte) error {
+	deadline := time.Now().Add(h.c.WriteTimeout)
+
+	// set a connection deadline, so writes don't
+	// block forever
+	if e := h.conn.SetWriteDeadline(deadline); e != nil {
+		return e
+	}
+
+	// try writing on the existing connection
+	n, e := h.conn.Write(b)
+	if e == nil {
+		return nil
+	}
+
+	// try reconnecting in the event of an error
+	c, e := connect(h.url, h.c.ConnectTimeout)
+	if e != nil {
+		return e
+	}
+	h.conn = c
+
+	// try writing again if we made a successful connection
+	_, e = h.conn.Write(b[n:])
+	if e != nil {
+		return e
+	}
+
 	return nil
 }
 
 // Flush fn
 func (h *Handler) Flush() {
-	h.Buffer.Flush()
-}
-
-type client struct {
-	url  string
-	conn net.Conn
-	mu   sync.Mutex
-}
-
-// This client is based on the syslog client here:
-// https://golang.org/src/log/syslog/syslog.go
-//
-// TODO: should this be a long-lived TCP connection?
-func Client(url string) (*client, error) {
-	c := &client{url: url}
-
-	// make an initial connection (this will be long-lived)
-	if e := c.connect(); e != nil {
-		return nil, e
-	}
-
-	return c, nil
-}
-
-func (c *client) connect() error {
-	if c.conn != nil {
-		// ignore err from close, it makes sense to continue anyway
-		c.conn.Close()
-		c.conn = nil
-	}
-
-	addr, e := net.ResolveTCPAddr("tcp", c.url)
-	if e != nil {
-		return e
-	}
-
-	conn, e := net.DialTCP("tcp", nil, addr)
-	if e != nil {
-		return e
-	}
-	if e := conn.SetWriteBuffer(1); e != nil {
-		return e
-	}
-	if e := conn.SetReadBuffer(1); e != nil {
-		return e
-	}
-	conn.SetNoDelay(true)
-	c.conn = conn
-	return nil
-}
-
-func (c *client) close() error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	if c.conn != nil {
-		err := c.conn.Close()
-		c.conn = nil
-		return err
-	}
-	return nil
-}
-
-// Writer that will first try writing, then
-// if that fails, try reconnecting the TCP
-// connection and writing again.
-
-// Failures will be retried by the buffer,
-// so we need to keep track of what's already
-// been written.
-func (c *client) Write(b []byte) (int, error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	var written int
-	if c.conn != nil {
-		if n, err := c.conn.Write(b); err == nil {
-			fmt.Printf("n written %d\n", n)
-			return n, nil
-		} else if n > 0 {
-			written = n
-		}
-	}
-	if err := c.connect(); err != nil {
-		return written, err
-	}
-
-	return c.conn.Write(b[written:])
+	h.q.Wait()
 }

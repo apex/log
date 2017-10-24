@@ -137,6 +137,13 @@ func (e *Entry) Trace(msg string) *Entry {
 	return v
 }
 
+// Flush logs if the handler implements them
+func (e *Entry) Flush() {
+	if f, ok := e.Logger.Handler.(Flusher); ok {
+		f.Flush()
+	}
+}
+
 // Stop should be used with Trace, to fire off the completion message. When
 // an `err` is passed the "error" field is set, and the log level is error.
 func (e *Entry) Stop(err *error) {
