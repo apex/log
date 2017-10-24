@@ -1,123 +1,88 @@
 package firehose
 
 import (
-	"bytes"
 	"encoding/json"
-	"io"
+	stdlog "log"
 
 	"github.com/apex/log"
-	"github.com/apex/log/buffer"
+	"github.com/apex/log/internal/queue"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/firehose"
-	"github.com/cenkalti/backoff"
 )
 
 // Config for firehose
 type Config struct {
 	// AWS Firehose client
-	Client *firehose.Firehose
+	Firehose *firehose.Firehose
 
 	// Name of the firehose stream
 	Stream string
 
-	// Optionally provide your own buffer
-	Buffer *buffer.Buffer
-
-	// Provide your own writer (useful for testing)
-	Writer io.Writer
+	// Advanced: tweak the queue
+	// Capacity: number of records before we start dropping
+	Capacity int
+	// Concurrency: number of records to write simulaneously
+	Concurrency int
 }
 
 // New firehose logger with the firehose client and the name of the stream
-func New(client *firehose.Firehose, stream string) *Handler {
+func New(session *session.Session, stream string) *Handler {
 	return NewConfig(&Config{
-		Client: client,
+		Firehose:    firehose.New(session),
+		Stream:      stream,
+		Capacity:    20,
+		Concurrency: 10,
 	})
 }
 
 // NewConfig fn
 func NewConfig(config *Config) *Handler {
-	if config.Writer == nil {
-		config.Writer = &writer{
-			client: config.Client,
-			stream: config.Stream,
-		}
+	queue := queue.New(config.Capacity, config.Concurrency)
+	return &Handler{
+		c: config,
+		q: queue,
 	}
-
-	if config.Buffer == nil {
-		config.Buffer = buffer.New(config.Writer)
-	}
-
-	return &Handler{config}
 }
 
 // Handler for firehose
 type Handler struct {
-	config *Config
+	q *queue.Queue
+	c *Config
 }
 
 // HandleLog buffers the logs then sends them to firehose
 func (h *Handler) HandleLog(e *log.Entry) error {
-	return nil
+	return h.q.Push(func() {
+		if e := h.send(e); e != nil {
+			stdlog.Printf("log/firehose: %s", e)
+		}
+	})
+}
+
+// TODO: consider batching later, though I'm
+// not convinced it's necessary since Firehose
+// should handle the writes and I don't think
+// you're paying more for it.
+func (h *Handler) send(e *log.Entry) error {
+	streamName := h.c.Stream
+	fh := h.c.Firehose
+
+	data, err := json.Marshal(e)
+	if err != nil {
+		return err
+	}
+
+	record := &firehose.Record{Data: data}
+	_, err = fh.PutRecord(&firehose.PutRecordInput{
+		DeliveryStreamName: aws.String(streamName),
+		Record:             record,
+	})
+
+	return err
 }
 
 // Flush manually and block until we've drained
 func (h *Handler) Flush() {
-
-}
-
-type writer struct {
-	client *firehose.Firehose
-	stream string
-}
-
-func (w *writer) Write(b []byte) (int, error) {
-	r := bytes.NewBuffer(b)
-	d := json.NewDecoder(r)
-
-	var records []*firehose.Record
-	for {
-		var raw json.RawMessage
-		if e := d.Decode(&raw); e == io.EOF {
-			break // done decoding file
-		} else if e != nil {
-			// probably a permanent issue, don't retry
-			return len(b), e
-		}
-		records = append(records, &firehose.Record{
-			Data: raw,
-		})
-	}
-
-	maxBatchSize := 400
-	lrecords := len(records)
-	for i := 0; i <= lrecords; i += maxBatchSize {
-		end := i + maxBatchSize
-		if end > lrecords {
-			end = lrecords
-		}
-		recs := records[i:end]
-
-		// write records with an exponential backoff
-		err := backoff.Retry(func() error {
-			return w.write(recs)
-		}, backoff.NewExponentialBackOff())
-
-		// don't retry for now
-		// TODO: we could be smarter here,
-		// and retry the remaining records
-		if err != nil {
-			return len(b), err
-		}
-	}
-
-	// success!
-	return len(b), nil
-}
-
-func (w *writer) write(records []*firehose.Record) error {
-	_, e := w.client.PutRecordBatch(&firehose.PutRecordBatchInput{
-		DeliveryStreamName: aws.String(w.stream),
-		Records:            records,
-	})
-	return e
+	h.q.Wait()
 }
