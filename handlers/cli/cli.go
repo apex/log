@@ -31,12 +31,12 @@ const (
 )
 
 // Colors mapping.
-var Colors = [...]color.Attribute{
-	log.DebugLevel: color.Attribute(gray),
-	log.InfoLevel:  color.Attribute(blue),
-	log.WarnLevel:  color.Attribute(yellow),
-	log.ErrorLevel: color.Attribute(red),
-	log.FatalLevel: color.Attribute(red),
+var Colors = [...]*color.Color{
+	log.DebugLevel: color.New(color.Attribute(gray)),
+	log.InfoLevel:  color.New(color.Attribute(blue)),
+	log.WarnLevel:  color.New(color.Attribute(yellow)),
+	log.ErrorLevel: color.New(color.Attribute(red)),
+	log.FatalLevel: color.New(color.Attribute(red)),
 }
 
 // Strings mapping.
@@ -65,20 +65,20 @@ func New(w io.Writer) *Handler {
 
 // HandleLog implements log.Handler.
 func (h *Handler) HandleLog(e *log.Entry) error {
-	fg := color.New(Colors[e.Level])
+	color := Colors[e.Level]
 	level := Strings[e.Level]
 	names := e.Fields.Names()
 
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
-	fg.Fprintf(h.Writer, "%s %-25s", bold.Sprintf("%*s", h.Padding+1, level), e.Message)
+	color.Fprintf(h.Writer, "%s %-25s", bold.Sprintf("%*s", h.Padding+1, level), e.Message)
 
 	for _, name := range names {
 		if name == "source" {
 			continue
 		}
-		fmt.Fprintf(h.Writer, " %s=%s", fg.Sprint(name), e.Fields.Get(name))
+		fmt.Fprintf(h.Writer, " %s=%s", color.Sprint(name), e.Fields.Get(name))
 	}
 
 	fmt.Fprintln(h.Writer)
