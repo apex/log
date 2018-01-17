@@ -20,23 +20,13 @@ var start = time.Now()
 
 var bold = color.New(color.Bold)
 
-// colors.
-const (
-	none   = 0
-	red    = 31
-	green  = 32
-	yellow = 33
-	blue   = 34
-	gray   = 37
-)
-
 // Colors mapping.
 var Colors = [...]*color.Color{
-	log.DebugLevel: color.New(color.Attribute(gray)),
-	log.InfoLevel:  color.New(color.Attribute(blue)),
-	log.WarnLevel:  color.New(color.Attribute(yellow)),
-	log.ErrorLevel: color.New(color.Attribute(red)),
-	log.FatalLevel: color.New(color.Attribute(red)),
+	log.DebugLevel: color.New(color.FgWhite),
+	log.InfoLevel:  color.New(color.FgBlue),
+	log.WarnLevel:  color.New(color.FgYellow),
+	log.ErrorLevel: color.New(color.FgRed),
+	log.FatalLevel: color.New(color.FgRed),
 }
 
 // Strings mapping.
