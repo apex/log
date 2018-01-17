@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/apex/log"
+	"github.com/fatih/color"
 )
 
 // Default handler outputting to stderr.
@@ -16,6 +17,8 @@ var Default = New(os.Stderr)
 
 // start time.
 var start = time.Now()
+
+var bold = color.New(color.Bold)
 
 // colors.
 const (
@@ -28,12 +31,12 @@ const (
 )
 
 // Colors mapping.
-var Colors = [...]int{
-	log.DebugLevel: gray,
-	log.InfoLevel:  blue,
-	log.WarnLevel:  yellow,
-	log.ErrorLevel: red,
-	log.FatalLevel: red,
+var Colors = [...]color.Attribute{
+	log.DebugLevel: color.Attribute(gray),
+	log.InfoLevel:  color.Attribute(blue),
+	log.WarnLevel:  color.Attribute(yellow),
+	log.ErrorLevel: color.Attribute(red),
+	log.FatalLevel: color.Attribute(red),
 }
 
 // Strings mapping.
@@ -62,21 +65,20 @@ func New(w io.Writer) *Handler {
 
 // HandleLog implements log.Handler.
 func (h *Handler) HandleLog(e *log.Entry) error {
-	color := Colors[e.Level]
+	fg := color.New(Colors[e.Level])
 	level := Strings[e.Level]
 	names := e.Fields.Names()
 
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
-	fmt.Fprintf(h.Writer, "\033[%dm%*s\033[0m %-25s", color, h.Padding+1, level, e.Message)
+	fg.Fprintf(h.Writer, "%s %-25s", bold.Sprintf("%*s", h.Padding+1, level), e.Message)
 
 	for _, name := range names {
 		if name == "source" {
 			continue
 		}
-
-		fmt.Fprintf(h.Writer, " \033[%dm%s\033[0m=%v", color, name, e.Fields.Get(name))
+		fmt.Fprintf(h.Writer, " %s=%s", fg.Sprint(name), e.Fields.Get(name))
 	}
 
 	fmt.Fprintln(h.Writer)
