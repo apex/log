@@ -48,13 +48,13 @@ type Handler struct {
 
 // New handler.
 func New(w io.Writer) *Handler {
-	switch w2 := w.(type) {
-	case *os.File:
+	if f, ok := w.(*os.File); ok {
 		return &Handler{
-			Writer:  colorable.NewColorable(w2),
+			Writer:  colorable.NewColorable(f),
 			Padding: 3,
 		}
 	}
+
 	return &Handler{
 		Writer:  w,
 		Padding: 3,
