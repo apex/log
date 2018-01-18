@@ -10,6 +10,7 @@ import (
 
 	"github.com/apex/log"
 	"github.com/fatih/color"
+	colorable "github.com/mattn/go-colorable"
 )
 
 // Default handler outputting to stderr.
@@ -47,6 +48,13 @@ type Handler struct {
 
 // New handler.
 func New(w io.Writer) *Handler {
+	switch w2 := w.(type) {
+	case *os.File:
+		return &Handler{
+			Writer:  colorable.NewColorable(w2),
+			Padding: 3,
+		}
+	}
 	return &Handler{
 		Writer:  w,
 		Padding: 3,
