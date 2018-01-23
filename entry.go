@@ -13,16 +13,21 @@ var _ Interface = (*Entry)(nil)
 // Now returns the current time.
 var Now = time.Now
 
+const FieldFuncCallDepth = 4
+
 // Entry represents a single log entry.
 type Entry struct {
-	Logger    *Logger   `json:"-"`
-	Fields    Fields    `json:"fields"`
-	Level     Level     `json:"level"`
-	Timestamp time.Time `json:"timestamp"`
-	Message   string    `json:"message"`
-	start     time.Time
-	fields    []Fields
+	Logger     *Logger   `json:"-"`
+	Fields     Fields    `json:"fields"`
+	Level      Level     `json:"level"`
+	Timestamp  time.Time `json:"timestamp"`
+	Message    string    `json:"message"`
+	start      time.Time
+	fields     []Fields
+	fieldFuncs []FieldFunc
 }
+
+type FieldFunc func() Fielder
 
 // NewEntry returns a new entry for `log`.
 func NewEntry(log *Logger) *Entry {
@@ -37,14 +42,35 @@ func (e *Entry) WithFields(fields Fielder) *Entry {
 	f = append(f, e.fields...)
 	f = append(f, fields.Fields())
 	return &Entry{
-		Logger: e.Logger,
-		fields: f,
+		Logger:     e.Logger,
+		fields:     f,
+		fieldFuncs: e.fieldFuncs,
 	}
+}
+
+func (e *Entry) applyFieldFuncs() *Entry {
+	for i := range e.fieldFuncs {
+		f := e.fieldFuncs[i]()
+		if f != nil {
+			e = e.WithFields(f)
+		}
+	}
+	return e
 }
 
 // WithField returns a new entry with the `key` and `value` set.
 func (e *Entry) WithField(key string, value interface{}) *Entry {
 	return e.WithFields(Fields{key: value})
+}
+
+func (e *Entry) WithFieldFunc(f FieldFunc) *Entry {
+	ff := e.fieldFuncs
+	ff = append(ff, f)
+	return &Entry{
+		Logger:     e.Logger,
+		fields:     e.fields,
+		fieldFuncs: ff,
+	}
 }
 
 // WithError returns a new entry with the "error" set to `err`.
@@ -78,53 +104,60 @@ func (e *Entry) WithError(err error) *Entry {
 
 // Debug level message.
 func (e *Entry) Debug(msg string) {
-	e.Logger.log(DebugLevel, e, msg)
+	e.doLog(DebugLevel, msg)
 }
 
 // Info level message.
 func (e *Entry) Info(msg string) {
-	e.Logger.log(InfoLevel, e, msg)
+	e.doLog(InfoLevel, msg)
 }
 
 // Warn level message.
 func (e *Entry) Warn(msg string) {
-	e.Logger.log(WarnLevel, e, msg)
+	e.doLog(WarnLevel, msg)
 }
 
 // Error level message.
 func (e *Entry) Error(msg string) {
-	e.Logger.log(ErrorLevel, e, msg)
+	e.doLog(ErrorLevel, msg)
 }
 
 // Fatal level message, followed by an exit.
 func (e *Entry) Fatal(msg string) {
-	e.Logger.log(FatalLevel, e, msg)
-	os.Exit(1)
+	e.doLog(FatalLevel, msg)
 }
 
 // Debugf level formatted message.
 func (e *Entry) Debugf(msg string, v ...interface{}) {
-	e.Debug(fmt.Sprintf(msg, v...))
+	e.doLog(DebugLevel, fmt.Sprintf(msg, v...))
 }
 
 // Infof level formatted message.
 func (e *Entry) Infof(msg string, v ...interface{}) {
-	e.Info(fmt.Sprintf(msg, v...))
+	e.doLog(InfoLevel, fmt.Sprintf(msg, v...))
 }
 
 // Warnf level formatted message.
 func (e *Entry) Warnf(msg string, v ...interface{}) {
-	e.Warn(fmt.Sprintf(msg, v...))
+	e.doLog(WarnLevel, fmt.Sprintf(msg, v...))
 }
 
 // Errorf level formatted message.
 func (e *Entry) Errorf(msg string, v ...interface{}) {
-	e.Error(fmt.Sprintf(msg, v...))
+	e.doLog(ErrorLevel, fmt.Sprintf(msg, v...))
 }
 
 // Fatalf level formatted message, followed by an exit.
 func (e *Entry) Fatalf(msg string, v ...interface{}) {
-	e.Fatal(fmt.Sprintf(msg, v...))
+	e.doLog(FatalLevel, fmt.Sprintf(msg, v...))
+}
+
+func (e *Entry) doLog(l Level, msg string) {
+	ne := e.applyFieldFuncs()
+	ne.Logger.log(l, ne, msg)
+	if l == FatalLevel {
+		os.Exit(1)
+	}
 }
 
 // Trace returns a new entry with a Stop method to fire off
