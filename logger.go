@@ -5,9 +5,6 @@ import (
 	"sort"
 )
 
-// assert interface compliance.
-var _ Interface = (*Logger)(nil)
-
 // Fielder is an interface for providing fields to custom types.
 type Fielder interface {
 	Fields() Fields
@@ -62,7 +59,7 @@ type Logger struct {
 }
 
 // WithFields returns a new entry with `fields` set.
-func (l *Logger) WithFields(fields Fielder) *Entry {
+func (l *Logger) WithFields(fields Fielder) Interface {
 	return NewEntry(l).WithFields(fields.Fields())
 }
 
@@ -70,12 +67,12 @@ func (l *Logger) WithFields(fields Fielder) *Entry {
 //
 // Note that the `key` should not have spaces in it - use camel
 // case or underscores
-func (l *Logger) WithField(key string, value interface{}) *Entry {
+func (l *Logger) WithField(key string, value interface{}) Interface {
 	return NewEntry(l).WithField(key, value)
 }
 
 // WithError returns a new entry with the "error" set to `err`.
-func (l *Logger) WithError(err error) *Entry {
+func (l *Logger) WithError(err error) Interface {
 	return NewEntry(l).WithError(err)
 }
 
@@ -131,7 +128,7 @@ func (l *Logger) Fatalf(msg string, v ...interface{}) {
 
 // Trace returns a new entry with a Stop method to fire off
 // a corresponding completion log, useful with defer.
-func (l *Logger) Trace(msg string) *Entry {
+func (l *Logger) Trace(msg string) Interface {
 	return NewEntry(l).Trace(msg)
 }
 

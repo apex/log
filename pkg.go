@@ -29,17 +29,17 @@ func SetLevelFromString(s string) {
 }
 
 // WithFields returns a new entry with `fields` set.
-func WithFields(fields Fielder) *Entry {
+func WithFields(fields Fielder) Interface {
 	return Log.WithFields(fields)
 }
 
 // WithField returns a new entry with the `key` and `value` set.
-func WithField(key string, value interface{}) *Entry {
+func WithField(key string, value interface{}) Interface {
 	return Log.WithField(key, value)
 }
 
 // WithError returns a new entry with the "error" set to `err`.
-func WithError(err error) *Entry {
+func WithError(err error) Interface {
 	return Log.WithError(err)
 }
 
@@ -95,6 +95,6 @@ func Fatalf(msg string, v ...interface{}) {
 
 // Trace returns a new entry with a Stop method to fire off
 // a corresponding completion log, useful with defer.
-func Trace(msg string) *Entry {
+func Trace(msg string) Interface {
 	return Log.Trace(msg)
 }
