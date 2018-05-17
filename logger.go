@@ -5,16 +5,10 @@ import (
 	"sort"
 )
 
-// Fielder is an interface for providing fields to custom types.
-type Fielder interface {
-	Fields() Fields
-}
-
-// Fields represents a map of entry level data used for structured logging.
-type Fields map[string]interface{}
+// note: Fields is defined in `interface.go`
 
 // Fields implements Fielder.
-func (f Fields) Fields() Fields {
+func (f Fields) Fields() map[string]interface{} {
 	return f
 }
 
