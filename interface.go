@@ -1,12 +1,12 @@
 package log
 
-// Fielder is an interface for providing fields to custom types.
-type Fielder interface {
-	Fields() map[string]interface{}
-}
-
 // Fields represents a map of entry level data used for structured logging.
 type Fields map[string]interface{}
+
+// Fielder is an interface for providing fields to custom types.
+type Fielder interface {
+	Fields() Fields
+}
 
 // Interface represents the API of both Logger and Entry.
 type Interface interface {

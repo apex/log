@@ -8,7 +8,7 @@ import (
 // note: Fields is defined in `interface.go`
 
 // Fields implements Fielder.
-func (f Fields) Fields() map[string]interface{} {
+func (f Fields) Fields() Fields {
 	return f
 }
 
