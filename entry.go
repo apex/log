@@ -33,6 +33,9 @@ func (e *Entry) WithFields(fields Fielder) Interface {
 	return e.withFields(fields)
 }
 
+// withFields returns a new entry with `fields` set.
+// but to satify the interface WithFields casts *Entry
+// back into `Interface`
 func (e *Entry) withFields(fields Fielder) *Entry {
 	f := []Fields{}
 	f = append(f, e.fields...)
