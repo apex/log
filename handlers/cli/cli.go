@@ -76,7 +76,7 @@ func (h *Handler) HandleLog(e *log.Entry) error {
 		if name == "source" {
 			continue
 		}
-		fmt.Fprintf(h.Writer, " %s=%s", color.Sprint(name), e.Fields.Get(name))
+		fmt.Fprintf(h.Writer, " %s=%v", color.Sprint(name), e.Fields.Get(name))
 	}
 
 	fmt.Fprintln(h.Writer)
