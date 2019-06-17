@@ -10,6 +10,8 @@ import (
 )
 
 func Test(t *testing.T) {
+	t.SkipNow()
+
 	h := apexlogs.Handler{
 		URL:       "http://localhost:5001",
 		ProjectID: "production",
