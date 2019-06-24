@@ -60,15 +60,19 @@ func (h *Handler) HandleLog(e *log.Entry) error {
 	return nil
 }
 
-// Flush all buffered logs.
-func (h *Handler) Flush() error {
+// Events returns the buffered events, and clears the buffer.
+func (h *Handler) Events() (events []client.Event) {
 	h.mu.Lock()
-	events := h.buffer
+	events = h.buffer
 	h.buffer = nil
 	h.mu.Unlock()
+	return
+}
 
+// Flush all buffered logs.
+func (h *Handler) Flush() error {
 	return h.c.AddEvents(client.AddEventsInput{
 		ProjectID: h.ProjectID,
-		Events:    events,
+		Events:    h.Events(),
 	})
 }
