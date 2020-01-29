@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/apex/log"
-	"github.com/apex/log/handlers/apexlogs/client"
+	"github.com/apex/logs/go/logs"
 )
 
 // TODO: periodic buffering
@@ -28,24 +28,24 @@ type Handler struct {
 
 	// buffer
 	mu     sync.Mutex
-	buffer []client.Event
+	buffer []logs.Event
 
 	// client
 	once sync.Once
-	c    client.Client
+	c    logs.Client
 }
 
 // HandleLog implements log.Handler.
 func (h *Handler) HandleLog(e *log.Entry) error {
 	// initialize client
 	h.once.Do(func() {
-		h.c = client.Client{
+		h.c = logs.Client{
 			URL: h.URL,
 		}
 	})
 
 	// create event
-	event := client.Event{
+	event := logs.Event{
 		Level:     levelMap[e.Level],
 		Message:   e.Message,
 		Fields:    map[string]interface{}(e.Fields),
@@ -61,7 +61,7 @@ func (h *Handler) HandleLog(e *log.Entry) error {
 }
 
 // Events returns the buffered events, and clears the buffer.
-func (h *Handler) Events() (events []client.Event) {
+func (h *Handler) Events() (events []logs.Event) {
 	h.mu.Lock()
 	events = h.buffer
 	h.buffer = nil
@@ -71,7 +71,7 @@ func (h *Handler) Events() (events []client.Event) {
 
 // Flush all buffered logs.
 func (h *Handler) Flush() error {
-	return h.c.AddEvents(client.AddEventsInput{
+	return h.c.AddEvents(logs.AddEventsInput{
 		ProjectID: h.ProjectID,
 		Events:    h.Events(),
 	})
