@@ -71,8 +71,14 @@ func (h *Handler) Events() (events []logs.Event) {
 
 // Flush all buffered logs.
 func (h *Handler) Flush() error {
+	events := h.Events()
+
+	if len(events) == 0 {
+		return nil
+	}
+
 	return h.c.AddEvents(logs.AddEventsInput{
 		ProjectID: h.ProjectID,
-		Events:    h.Events(),
+		Events:    events,
 	})
 }
