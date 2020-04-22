@@ -2,6 +2,7 @@
 package apexlogs
 
 import (
+	"net/http"
 	"sync"
 
 	"github.com/apex/log"
@@ -26,6 +27,9 @@ type Handler struct {
 	// ProjectID is the id of the project that you are collecting logs for.
 	ProjectID string
 
+	// HTTPClient is the client used for making requests, defaulting to http.DefaultClient.
+	HTTPClient *http.Client
+
 	// buffer
 	mu     sync.Mutex
 	buffer []logs.Event
@@ -37,13 +41,6 @@ type Handler struct {
 
 // HandleLog implements log.Handler.
 func (h *Handler) HandleLog(e *log.Entry) error {
-	// initialize client
-	h.once.Do(func() {
-		h.c = logs.Client{
-			URL: h.URL,
-		}
-	})
-
 	// create event
 	event := logs.Event{
 		Level:     levelMap[e.Level],
@@ -76,6 +73,14 @@ func (h *Handler) Flush() error {
 	if len(events) == 0 {
 		return nil
 	}
+
+	// initialize client
+	h.once.Do(func() {
+		h.c = logs.Client{
+			URL:        h.URL,
+			HTTPClient: h.HTTPClient,
+		}
+	})
 
 	return h.c.AddEvents(logs.AddEventsInput{
 		ProjectID: h.ProjectID,
