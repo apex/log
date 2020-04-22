@@ -1,4 +1,9 @@
 
+v1.1.3 / 2020-04-22
+===================
+
+  * add events len check before flushing to apexlogs handler
+
 v1.1.2 / 2020-01-29
 ===================
 
