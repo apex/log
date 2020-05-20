@@ -8,6 +8,7 @@ require (
 	github.com/aphistic/sweet v0.2.0 // indirect
 	github.com/aws/aws-sdk-go v1.20.6
 	github.com/aybabtme/rgbterm v0.0.0-20170906152045-cc83f3b3ce59
+	github.com/coreos/go-systemd/v22 v22.0.0
 	github.com/fatih/color v1.7.0
 	github.com/go-logfmt/logfmt v0.4.0
 	github.com/golang/protobuf v1.3.1 // indirect
