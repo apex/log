@@ -12,13 +12,12 @@ import (
 func TestFromContext(t *testing.T) {
 	ctx := context.Background()
 
-	logger, ok := log.FromContext(ctx)
-	assert.False(t, ok)
-	assert.Nil(t, logger)
-
-	ctx = log.NewContext(ctx, log.Log)
-
-	logger, ok = log.FromContext(ctx)
-	assert.True(t, ok)
+	logger := log.FromContext(ctx)
 	assert.Equal(t, log.Log, logger)
+
+	logs := log.WithField("foo", "bar")
+	ctx = log.NewContext(ctx, logs)
+
+	logger = log.FromContext(ctx)
+	assert.Equal(t, logs, logger)
 }

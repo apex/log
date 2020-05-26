@@ -10,8 +10,10 @@ func NewContext(ctx context.Context, v Interface) context.Context {
 	return context.WithValue(ctx, logKey{}, v)
 }
 
-// FromContext returns logger from context.
-func FromContext(ctx context.Context) (Interface, bool) {
-	v, ok := ctx.Value(logKey{}).(Interface)
-	return v, ok
+// FromContext returns the logger from context, or log.Log.
+func FromContext(ctx context.Context) Interface {
+	if v, ok := ctx.Value(logKey{}).(Interface); ok {
+		return v
+	}
+	return Log
 }
