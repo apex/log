@@ -1,4 +1,9 @@
 
+v1.3.0 / 2020-05-26
+===================
+
+  * change FromContext() to always return a logger
+
 v1.2.0 / 2020-05-26
 ===================
 
