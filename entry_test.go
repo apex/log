@@ -48,6 +48,19 @@ func TestEntry_WithErrorFields(t *testing.T) {
 	}, b.mergedFields())
 }
 
+func TestEntry_WithFieldFunc(t *testing.T) {
+	var foo = "test"
+	a := NewEntry(nil)
+	a = a.WithFieldFunc(func() Fielder {
+		return Fields{
+			"foo": foo,
+		}
+	})
+	foo = "bar"
+	a = a.applyFieldFuncs()
+	assert.Equal(t, Fields{"foo": "bar"}, a.mergedFields())
+}
+
 type errFields string
 
 func (ef errFields) Error() string {
