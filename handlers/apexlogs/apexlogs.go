@@ -27,6 +27,9 @@ type Handler struct {
 	// ProjectID is the id of the project that you are collecting logs for.
 	ProjectID string
 
+	// AuthToken is the authentication token.
+	AuthToken string
+
 	// HTTPClient is the client used for making requests, defaulting to http.DefaultClient.
 	HTTPClient *http.Client
 
@@ -79,6 +82,7 @@ func (h *Handler) Flush() error {
 		h.c = logs.Client{
 			URL:        h.URL,
 			HTTPClient: h.HTTPClient,
+			AuthToken:  h.AuthToken,
 		}
 	})
 
