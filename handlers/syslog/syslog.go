@@ -2,10 +2,10 @@
 package syslog
 
 import (
-	"fmt"
+  "fmt"
   "log/syslog"
 
-	"github.com/apex/log"
+  "github.com/apex/log"
 )
 
 // Handler implementation.
@@ -56,12 +56,12 @@ func New(addr string, facility syslog.Priority, tag string) (h *Handler, err err
 func (h *Handler) HandleLog(e *log.Entry) error {
   out := e.Message + "  {"
 
-	for _, name := range e.Fields.Names() {
-		if name == "source" {
-			continue
-		}
-		out += fmt.Sprintf(" %s=\"%v\"", name, e.Fields.Get(name))
-	}
+  for _, name := range e.Fields.Names() {
+    if name == "source" {
+      continue
+    }
+    out += fmt.Sprintf(" %s=\"%v\"", name, e.Fields.Get(name))
+  }
   out += " }"
 
   return h.levelsMap[e.Level](out)
