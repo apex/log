@@ -63,7 +63,6 @@ type server struct {
 	logs log.Interface
 }
 
-// ServeHTTP implementation.
 func (s server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	logs := s.logs.WithFields(log.Fields{
 		"method": r.Method,
