@@ -5,6 +5,7 @@ Package log implements a simple structured logging API inspired by Logrus, desig
 
 ## Handlers
 
+- __apexlog__ – handler for [Apex Logs](https://apex.sh/logs/)
 - __cli__ – human-friendly CLI output
 - __discard__ – discards all logs
 - __es__ – Elasticsearch handler
