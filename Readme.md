@@ -5,7 +5,7 @@ Package log implements a simple structured logging API inspired by Logrus, desig
 
 ## Handlers
 
-- __apexlog__ – handler for [Apex Logs](https://apex.sh/logs/)
+- __apexlogs__ – handler for [Apex Logs](https://apex.sh/logs/)
 - __cli__ – human-friendly CLI output
 - __discard__ – discards all logs
 - __es__ – Elasticsearch handler
@@ -19,6 +19,42 @@ Package log implements a simple structured logging API inspired by Logrus, desig
 - __papertrail__ – Papertrail handler
 - __text__ – human-friendly colored output
 - __delta__ – outputs the delta between log calls and spinner
+
+## Example
+
+Example using the [Apex Logs](https://apex.sh/logs/) handler.
+
+```go
+package main
+
+import (
+	"time"
+
+	"github.com/apex/log"
+	"github.com/apex/log/handlers/apexlogs"
+)
+
+func main() {
+	log.SetHandler(&apexlogs.Handler{
+		URL:       "https://your-endpoint.app",
+		ProjectID: "api_production",
+		AuthToken: "9A3617619B763767",
+	})
+
+	logs := log.WithFields(log.Fields{
+		"program": "api",
+		"version": "1.2.0",
+		"host":    "api-01",
+	})
+
+	logs.WithField("name", "tobi").Info("creating user")
+	err := createUser("tobi")
+	if err != nil {
+		logs.WithError(err).Error("creating user")
+		return 
+	}
+}
+```
 
 ---
 
