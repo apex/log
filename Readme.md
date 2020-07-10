@@ -28,7 +28,8 @@ Example using the [Apex Logs](https://apex.sh/logs/) handler.
 package main
 
 import (
-	"time"
+	"fmt"
+	"net/http"
 
 	"github.com/apex/log"
 	"github.com/apex/log/handlers/apexlogs"
@@ -47,12 +48,30 @@ func main() {
 		"host":    "api-01",
 	})
 
-	logs.WithField("name", "tobi").Info("creating user")
-	err := createUser("tobi")
-	if err != nil {
-		logs.WithError(err).Error("creating user")
-		return 
+	s := server{
+		logs: logs,
 	}
+
+	logs.Info("starting server")
+	err := http.ListenAndServe(":3000", s)
+	if err != nil {
+		logs.WithError(err).Error("starting server")
+	}
+}
+
+type server struct {
+	logs log.Interface
+}
+
+// ServeHTTP implementation.
+func (s server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	logs := s.logs.WithFields(log.Fields{
+		"method": r.Method,
+		"path":   r.URL.Path,
+	})
+
+	logs.Info("request")
+	fmt.Fprintln(w, "Hello World")
 }
 ```
 
