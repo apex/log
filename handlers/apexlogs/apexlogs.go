@@ -42,22 +42,16 @@ type Handler struct {
 // Option function.
 type Option func(*Handler)
 
-// New Apex Logs handler with the url, projectID and options.
-func New(url, projectID string, options ...Option) *Handler {
+// New Apex Logs handler with the url, projectID, authToken and options.
+func New(url, projectID, authToken string, options ...Option) *Handler {
 	var v Handler
 	v.url = url
 	v.projectID = projectID
+	v.authToken = authToken
 	for _, o := range options {
 		o(&v)
 	}
 	return &v
-}
-
-// WithAuthToken sets the authentication token used for requests.
-func WithAuthToken(token string) Option {
-	return func(v *Handler) {
-		v.authToken = token
-	}
 }
 
 // WithHTTPClient sets the HTTP client used for requests.

@@ -11,10 +11,10 @@ import (
 
 func main() {
 	url := os.Getenv("APEX_LOGS_URL")
-	token := os.Getenv("APEX_LOGS_AUTH_TOKEN")
 	projectID := os.Getenv("APEX_LOGS_PROJECT_ID")
+	authToken := os.Getenv("APEX_LOGS_AUTH_TOKEN")
 
-	h := apexlogs.New(url, projectID, apexlogs.WithAuthToken(token))
+	h := apexlogs.New(url, projectID, authToken)
 
 	defer h.Close()
 
