@@ -1,16 +1,23 @@
-// Package apexlogs implements a handler for Apex Logs.
+// Package apexlogs implements a handler for Apex Logs https://apex.sh/logs/.
 package apexlogs
 
 import (
+	"context"
+	stdlog "log"
 	"net/http"
+	"os"
 	"sync"
+
+	"github.com/tj/go-buffer"
 
 	"github.com/apex/log"
 	"github.com/apex/logs/go/logs"
 )
 
-// TODO: periodic buffering
+// logger instance.
+var logger = stdlog.New(os.Stderr, "buffer ", stdlog.LstdFlags)
 
+// levelMap is a mapping of severity levels.
 var levelMap = map[log.Level]string{
 	log.DebugLevel: "debug",
 	log.InfoLevel:  "info",
@@ -21,73 +28,108 @@ var levelMap = map[log.Level]string{
 
 // Handler implementation.
 type Handler struct {
-	// URL is the endpoint for your Apex Logs deployment API.
-	URL string
+	url           string
+	projectID     string
+	authToken     string
+	httpClient    *http.Client
+	bufferOptions []buffer.Option
 
-	// ProjectID is the id of the project that you are collecting logs for.
-	ProjectID string
-
-	// AuthToken is the authentication token.
-	AuthToken string
-
-	// HTTPClient is the client used for making requests, defaulting to http.DefaultClient.
-	HTTPClient *http.Client
-
-	// buffer
-	mu     sync.Mutex
-	buffer []logs.Event
-
-	// client
 	once sync.Once
+	b    *buffer.Buffer
 	c    logs.Client
+}
+
+// Option function.
+type Option func(*Handler)
+
+// New Apex Logs handler with the url, projectID and options.
+func New(url, projectID string, options ...Option) *Handler {
+	var v Handler
+	v.url = url
+	v.projectID = projectID
+	for _, o := range options {
+		o(&v)
+	}
+	return &v
+}
+
+// WithAuthToken sets the authentication token used for requests.
+func WithAuthToken(token string) Option {
+	return func(v *Handler) {
+		v.authToken = token
+	}
+}
+
+// WithHTTPClient sets the HTTP client used for requests.
+func WithHTTPClient(client *http.Client) Option {
+	return func(v *Handler) {
+		v.httpClient = client
+	}
+}
+
+// WithBufferOptions sets options for the underlying buffer used to batch logs.
+func WithBufferOptions(options ...buffer.Option) Option {
+	return func(v *Handler) {
+		v.bufferOptions = options
+	}
+}
+
+// init the client and buffer.
+func (h *Handler) init() {
+	h.c = logs.Client{
+		URL:        h.url,
+		HTTPClient: h.httpClient,
+		AuthToken:  h.authToken,
+	}
+
+	var options []buffer.Option
+	options = append(options, buffer.WithFlushHandler(h.handleFlush))
+	options = append(options, buffer.WithErrorHandler(h.handleError))
+	options = append(options, h.bufferOptions...)
+	h.b = buffer.New(options...)
 }
 
 // HandleLog implements log.Handler.
 func (h *Handler) HandleLog(e *log.Entry) error {
-	// create event
-	event := logs.Event{
+	h.once.Do(h.init)
+
+	h.b.Push(logs.Event{
 		Level:     levelMap[e.Level],
 		Message:   e.Message,
 		Fields:    map[string]interface{}(e.Fields),
 		Timestamp: e.Timestamp,
-	}
-
-	// buffer event
-	h.mu.Lock()
-	h.buffer = append(h.buffer, event)
-	h.mu.Unlock()
+	})
 
 	return nil
 }
 
-// Events returns the buffered events, and clears the buffer.
-func (h *Handler) Events() (events []logs.Event) {
-	h.mu.Lock()
-	events = h.buffer
-	h.buffer = nil
-	h.mu.Unlock()
-	return
+// Flush any pending logs.
+func (h *Handler) Flush() {
+	h.b.Flush()
 }
 
-// Flush all buffered logs.
-func (h *Handler) Flush() error {
-	events := h.Events()
+// Close flushes any pending logs, and waits for flushing to complete. This
+// method should be called before exiting your program to ensure entries have
+// flushed properly.
+func (h *Handler) Close() {
+	h.b.Close()
+}
 
-	if len(events) == 0 {
-		return nil
+// handleFlush implementation.
+func (h *Handler) handleFlush(ctx context.Context, values []interface{}) error {
+	var events []logs.Event
+
+	for _, v := range values {
+		events = append(events, v.(logs.Event))
 	}
 
-	// initialize client
-	h.once.Do(func() {
-		h.c = logs.Client{
-			URL:        h.URL,
-			HTTPClient: h.HTTPClient,
-			AuthToken:  h.AuthToken,
-		}
-	})
-
 	return h.c.AddEvents(logs.AddEventsInput{
-		ProjectID: h.ProjectID,
+		ProjectID: h.projectID,
 		Events:    events,
 	})
+}
+
+// handleError implementation.
+func (h *Handler) handleError(err error) {
+	logger.Printf("error flushing logs: %v", err)
 }

@@ -28,49 +28,26 @@ Example using the [Apex Logs](https://apex.sh/logs/) handler.
 package main
 
 import (
-	"fmt"
-	"net/http"
+	"errors"
+	"time"
 
 	"github.com/apex/log"
-	"github.com/apex/log/handlers/apexlogs"
 )
 
 func main() {
-	log.SetHandler(&apexlogs.Handler{
-		URL:       "https://your-endpoint.app",
-		ProjectID: "api_production",
-		AuthToken: "9A3617619B763767",
+	ctx := log.WithFields(log.Fields{
+		"file": "something.png",
+		"type": "image/png",
+		"user": "tobi",
 	})
 
-	logs := log.WithFields(log.Fields{
-		"program": "api",
-		"version": "1.2.0",
-		"host":    "api-01",
-	})
-
-	s := server{
-		logs: logs,
+	for range time.Tick(time.Millisecond * 200) {
+		ctx.Info("upload")
+		ctx.Info("upload complete")
+		ctx.Warn("upload retry")
+		ctx.WithError(errors.New("unauthorized")).Error("upload failed")
+		ctx.Errorf("failed to upload %s", "img.png")
 	}
-
-	logs.Info("starting server")
-	err := http.ListenAndServe(":3000", s)
-	if err != nil {
-		logs.WithError(err).Error("starting server")
-	}
-}
-
-type server struct {
-	logs log.Interface
-}
-
-func (s server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	logs := s.logs.WithFields(log.Fields{
-		"method": r.Method,
-		"path":   r.URL.Path,
-	})
-
-	logs.Info("request")
-	fmt.Fprintln(w, "Hello World")
 }
 ```
 
