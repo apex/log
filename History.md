@@ -1,4 +1,10 @@
 
+v1.6.0 / 2020-07-13
+===================
+
+  * update apex/logs dep to v1.0.0
+  * docs: mention that Flush() is non-blocking now, use Close()
+
 v1.5.0 / 2020-07-11
 ===================
 
