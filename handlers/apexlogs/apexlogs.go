@@ -97,7 +97,7 @@ func (h *Handler) HandleLog(e *log.Entry) error {
 	return nil
 }
 
-// Flush any pending logs.
+// Flush any pending logs. This method is non-blocking.
 func (h *Handler) Flush() {
 	h.b.Flush()
 }
