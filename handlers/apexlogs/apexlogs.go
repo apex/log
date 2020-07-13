@@ -11,7 +11,7 @@ import (
 	"github.com/tj/go-buffer"
 
 	"github.com/apex/log"
-	"github.com/apex/logs/go/logs"
+	"github.com/apex/logs"
 )
 
 // logger instance.
