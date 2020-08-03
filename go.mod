@@ -21,7 +21,7 @@ require (
 	github.com/smartystreets/gunit v1.0.0 // indirect
 	github.com/stretchr/testify v1.6.1
 	github.com/tj/assert v0.0.3
-	github.com/tj/go-buffer v1.0.1
+	github.com/tj/go-buffer v1.1.0
 	github.com/tj/go-elastic v0.0.0-20171221160941-36157cbbebc2
 	github.com/tj/go-kinesis v0.0.0-20171128231115-08b17f58cb1b
 	github.com/tj/go-spin v1.1.0

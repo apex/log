@@ -102,6 +102,11 @@ func (h *Handler) Flush() {
 	h.b.Flush()
 }
 
+// FlushSync any pending logs. This method is blocking.
+func (h *Handler) FlushSync() {
+	h.b.FlushSync()
+}
+
 // Close flushes any pending logs, and waits for flushing to complete. This
 // method should be called before exiting your program to ensure entries have
 // flushed properly.
