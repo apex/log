@@ -1,4 +1,9 @@
 
+v1.7.1 / 2020-08-05
+===================
+
+  * fix potential nil panic in apexlogs handler
+
 v1.7.0 / 2020-08-03
 ===================
 
