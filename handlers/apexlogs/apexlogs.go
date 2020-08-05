@@ -6,7 +6,6 @@ import (
 	stdlog "log"
 	"net/http"
 	"os"
-	"sync"
 
 	"github.com/tj/go-buffer"
 
@@ -28,15 +27,12 @@ var levelMap = map[log.Level]string{
 
 // Handler implementation.
 type Handler struct {
-	url           string
 	projectID     string
-	authToken     string
 	httpClient    *http.Client
 	bufferOptions []buffer.Option
 
-	once sync.Once
-	b    *buffer.Buffer
-	c    logs.Client
+	b *buffer.Buffer
+	c logs.Client
 }
 
 // Option function.
@@ -45,12 +41,27 @@ type Option func(*Handler)
 // New Apex Logs handler with the url, projectID, authToken and options.
 func New(url, projectID, authToken string, options ...Option) *Handler {
 	var v Handler
-	v.url = url
 	v.projectID = projectID
-	v.authToken = authToken
+
+	// options
 	for _, o := range options {
 		o(&v)
 	}
+
+	// logs client
+	v.c = logs.Client{
+		URL:        url,
+		AuthToken:  authToken,
+		HTTPClient: v.httpClient,
+	}
+
+	// event buffer
+	var o []buffer.Option
+	o = append(o, buffer.WithFlushHandler(v.handleFlush))
+	o = append(o, buffer.WithErrorHandler(v.handleError))
+	o = append(o, v.bufferOptions...)
+	v.b = buffer.New(o...)
+
 	return &v
 }
 
@@ -68,25 +79,8 @@ func WithBufferOptions(options ...buffer.Option) Option {
 	}
 }
 
-// init the client and buffer.
-func (h *Handler) init() {
-	h.c = logs.Client{
-		URL:        h.url,
-		HTTPClient: h.httpClient,
-		AuthToken:  h.authToken,
-	}
-
-	var options []buffer.Option
-	options = append(options, buffer.WithFlushHandler(h.handleFlush))
-	options = append(options, buffer.WithErrorHandler(h.handleError))
-	options = append(options, h.bufferOptions...)
-	h.b = buffer.New(options...)
-}
-
 // HandleLog implements log.Handler.
 func (h *Handler) HandleLog(e *log.Entry) error {
-	h.once.Do(h.init)
-
 	h.b.Push(logs.Event{
 		Level:     levelMap[e.Level],
 		Message:   e.Message,
