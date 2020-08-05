@@ -1,4 +1,9 @@
 
+v1.8.0 / 2020-08-05
+===================
+
+  * refactor apexlogs handler to not make the AddEvents() call if there are no events to flush
+
 v1.7.1 / 2020-08-05
 ===================
 
