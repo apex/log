@@ -116,6 +116,10 @@ func (h *Handler) handleFlush(ctx context.Context, values []interface{}) error {
 		events = append(events, v.(logs.Event))
 	}
 
+	if len(events) == 0 {
+		return nil
+	}
+
 	return h.c.AddEvents(logs.AddEventsInput{
 		ProjectID: h.projectID,
 		Events:    events,
