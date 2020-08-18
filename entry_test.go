@@ -3,6 +3,7 @@ package log
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -53,6 +54,12 @@ func TestEntry_WithError_nil(t *testing.T) {
 	b := a.WithError(nil)
 	assert.Equal(t, Fields{}, a.mergedFields())
 	assert.Equal(t, Fields{}, b.mergedFields())
+}
+
+func TestEntry_WithDuration(t *testing.T) {
+	a := NewEntry(nil)
+	b := a.WithDuration(time.Second * 2)
+	assert.Equal(t, Fields{"duration": int64(2000)}, b.mergedFields())
 }
 
 type errFields string

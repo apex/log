@@ -47,6 +47,12 @@ func (e *Entry) WithField(key string, value interface{}) *Entry {
 	return e.WithFields(Fields{key: value})
 }
 
+// WithDuration returns a new entry with the "duration" field set
+// to the given duration in milliseconds.
+func (e *Entry) WithDuration(d time.Duration) *Entry {
+	return e.WithField("duration", d.Milliseconds())
+}
+
 // WithError returns a new entry with the "error" set to `err`.
 //
 // The given error may implement .Fielder, if it does the method
