@@ -48,6 +48,13 @@ func TestEntry_WithErrorFields(t *testing.T) {
 	}, b.mergedFields())
 }
 
+func TestEntry_WithErrorNil(t *testing.T) {
+	a := NewEntry(nil)
+	b := a.WithError(nil)
+	assert.Equal(t, Fields{}, a.mergedFields())
+	assert.Equal(t, Fields{}, b.mergedFields())
+}
+
 type errFields string
 
 func (ef errFields) Error() string {
