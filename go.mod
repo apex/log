@@ -1,6 +1,6 @@
 module github.com/apex/log
 
-go 1.12
+go 1.13
 
 require (
 	github.com/apex/logs v1.0.0
@@ -15,7 +15,7 @@ require (
 	github.com/jpillora/backoff v0.0.0-20180909062703-3050d21c67d7 // indirect
 	github.com/kr/pretty v0.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.2
-	github.com/pkg/errors v0.8.1
+	github.com/pkg/errors v0.9.1
 	github.com/rogpeppe/fastuuid v1.1.0
 	github.com/smartystreets/go-aws-auth v0.0.0-20180515143844-0c1422d1fdb9 // indirect
 	github.com/smartystreets/gunit v1.0.0 // indirect
