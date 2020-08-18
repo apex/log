@@ -3,7 +3,6 @@ package log_test
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/apex/log"
 	"github.com/apex/log/handlers/discard"
@@ -111,7 +110,7 @@ func TestLogger_Trace_info(t *testing.T) {
 		assert.Equal(t, e.Message, "upload")
 		assert.Equal(t, e.Level, log.InfoLevel)
 		assert.Equal(t, "sloth.png", e.Fields["file"])
-		assert.IsType(t, time.Duration(0), e.Fields["duration"])
+		assert.IsType(t, int64(0), e.Fields["duration"])
 	}
 }
 
@@ -143,7 +142,7 @@ func TestLogger_Trace_error(t *testing.T) {
 		assert.Equal(t, e.Level, log.ErrorLevel)
 		assert.Equal(t, "sloth.png", e.Fields["file"])
 		assert.Equal(t, "boom", e.Fields["error"])
-		assert.IsType(t, time.Duration(0), e.Fields["duration"])
+		assert.IsType(t, int64(0), e.Fields["duration"])
 	}
 }
 
@@ -173,7 +172,7 @@ func TestLogger_Trace_nil(t *testing.T) {
 		assert.Equal(t, e.Message, "upload")
 		assert.Equal(t, e.Level, log.InfoLevel)
 		assert.Equal(t, "sloth.png", e.Fields["file"])
-		assert.IsType(t, time.Duration(0), e.Fields["duration"])
+		assert.IsType(t, int64(0), e.Fields["duration"])
 	}
 }
 
@@ -236,13 +235,13 @@ func BenchmarkLogger_large(b *testing.B) {
 			"size": 1 << 20,
 		}).
 			WithFields(log.Fields{
-			"some":     "more",
-			"data":     "here",
-			"whatever": "blah blah",
-			"more":     "stuff",
-			"context":  "such useful",
-			"much":     "fun",
-		}).
+				"some":     "more",
+				"data":     "here",
+				"whatever": "blah blah",
+				"more":     "stuff",
+				"context":  "such useful",
+				"much":     "fun",
+			}).
 			WithError(err).Error("upload failed")
 	}
 }

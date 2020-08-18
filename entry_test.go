@@ -38,7 +38,7 @@ func TestEntry_WithError(t *testing.T) {
 	assert.Equal(t, Fields{"error": "boom"}, b.mergedFields())
 }
 
-func TestEntry_WithErrorFields(t *testing.T) {
+func TestEntry_WithError_fields(t *testing.T) {
 	a := NewEntry(nil)
 	b := a.WithError(errFields("boom"))
 	assert.Equal(t, Fields{}, a.mergedFields())
@@ -48,7 +48,7 @@ func TestEntry_WithErrorFields(t *testing.T) {
 	}, b.mergedFields())
 }
 
-func TestEntry_WithErrorNil(t *testing.T) {
+func TestEntry_WithError_nil(t *testing.T) {
 	a := NewEntry(nil)
 	b := a.WithError(nil)
 	assert.Equal(t, Fields{}, a.mergedFields())
