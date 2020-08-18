@@ -13,9 +13,9 @@ func TestEntry_WithFields(t *testing.T) {
 
 	b := a.WithFields(Fields{"foo": "bar"})
 	assert.Equal(t, Fields{}, a.mergedFields())
-	assert.Equal(t, Fields{"foo": "bar"}, b.mergedFields())
+	assert.Equal(t, Fields{"foo": "bar"}, b.(*Entry).mergedFields())
 
-	c := a.WithFields(Fields{"foo": "hello", "bar": "world"})
+	c := a.WithFields(Fields{"foo": "hello", "bar": "world"}).(*Entry)
 
 	e := c.finalize(InfoLevel, "upload")
 	assert.Equal(t, e.Message, "upload")
@@ -28,19 +28,19 @@ func TestEntry_WithField(t *testing.T) {
 	a := NewEntry(nil)
 	b := a.WithField("foo", "bar")
 	assert.Equal(t, Fields{}, a.mergedFields())
-	assert.Equal(t, Fields{"foo": "bar"}, b.mergedFields())
+	assert.Equal(t, Fields{"foo": "bar"}, b.(*Entry).mergedFields())
 }
 
 func TestEntry_WithError(t *testing.T) {
 	a := NewEntry(nil)
 	b := a.WithError(fmt.Errorf("boom"))
 	assert.Equal(t, Fields{}, a.mergedFields())
-	assert.Equal(t, Fields{"error": "boom"}, b.mergedFields())
+	assert.Equal(t, Fields{"error": "boom"}, b.(*Entry).mergedFields())
 }
 
 func TestEntry_WithErrorFields(t *testing.T) {
 	a := NewEntry(nil)
-	b := a.WithError(errFields("boom"))
+	b := a.WithError(errFields("boom")).(*Entry)
 	assert.Equal(t, Fields{}, a.mergedFields())
 	assert.Equal(t, Fields{
 		"error":  "boom",

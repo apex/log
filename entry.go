@@ -7,9 +7,6 @@ import (
 	"time"
 )
 
-// assert interface compliance.
-var _ Interface = (*Entry)(nil)
-
 // Now returns the current time.
 var Now = time.Now
 
@@ -32,7 +29,14 @@ func NewEntry(log *Logger) *Entry {
 }
 
 // WithFields returns a new entry with `fields` set.
-func (e *Entry) WithFields(fields Fielder) *Entry {
+func (e *Entry) WithFields(fields Fielder) Interface {
+	return e.withFields(fields)
+}
+
+// withFields returns a new entry with `fields` set.
+// but to satify the interface WithFields casts *Entry
+// back into `Interface`
+func (e *Entry) withFields(fields Fielder) *Entry {
 	f := []Fields{}
 	f = append(f, e.fields...)
 	f = append(f, fields.Fields())
@@ -43,7 +47,7 @@ func (e *Entry) WithFields(fields Fielder) *Entry {
 }
 
 // WithField returns a new entry with the `key` and `value` set.
-func (e *Entry) WithField(key string, value interface{}) *Entry {
+func (e *Entry) WithField(key string, value interface{}) Interface {
 	return e.WithFields(Fields{key: value})
 }
 
@@ -51,7 +55,7 @@ func (e *Entry) WithField(key string, value interface{}) *Entry {
 //
 // The given error may implement .Fielder, if it does the method
 // will add all its `.Fields()` into the returned entry.
-func (e *Entry) WithError(err error) *Entry {
+func (e *Entry) WithError(err error) Interface {
 	ctx := e.WithField("error", err.Error())
 
 	if s, ok := err.(stackTracer); ok {
@@ -129,9 +133,9 @@ func (e *Entry) Fatalf(msg string, v ...interface{}) {
 
 // Trace returns a new entry with a Stop method to fire off
 // a corresponding completion log, useful with defer.
-func (e *Entry) Trace(msg string) *Entry {
+func (e *Entry) Trace(msg string) Interface {
 	e.Info(msg)
-	v := e.WithFields(e.Fields)
+	v := e.withFields(e.Fields)
 	v.Message = msg
 	v.start = time.Now()
 	return v

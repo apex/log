@@ -93,7 +93,7 @@ func TestLogger_Trace_info(t *testing.T) {
 	}
 
 	func() (err error) {
-		defer l.WithField("file", "sloth.png").Trace("upload").Stop(&err)
+		defer l.WithField("file", "sloth.png").Trace("upload").(*log.Entry).Stop(&err)
 		return nil
 	}()
 
@@ -124,7 +124,7 @@ func TestLogger_Trace_error(t *testing.T) {
 	}
 
 	func() (err error) {
-		defer l.WithField("file", "sloth.png").Trace("upload").Stop(&err)
+		defer l.WithField("file", "sloth.png").Trace("upload").(*log.Entry).Stop(&err)
 		return fmt.Errorf("boom")
 	}()
 
@@ -156,7 +156,7 @@ func TestLogger_Trace_nil(t *testing.T) {
 	}
 
 	func() {
-		defer l.WithField("file", "sloth.png").Trace("upload").Stop(nil)
+		defer l.WithField("file", "sloth.png").Trace("upload").(*log.Entry).Stop(nil)
 	}()
 
 	assert.Equal(t, 2, len(h.Entries))
@@ -236,13 +236,13 @@ func BenchmarkLogger_large(b *testing.B) {
 			"size": 1 << 20,
 		}).
 			WithFields(log.Fields{
-			"some":     "more",
-			"data":     "here",
-			"whatever": "blah blah",
-			"more":     "stuff",
-			"context":  "such useful",
-			"much":     "fun",
-		}).
+				"some":     "more",
+				"data":     "here",
+				"whatever": "blah blah",
+				"more":     "stuff",
+				"context":  "such useful",
+				"much":     "fun",
+			}).
 			WithError(err).Error("upload failed")
 	}
 }
