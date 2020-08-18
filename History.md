@@ -1,4 +1,11 @@
 
+v1.9.0 / 2020-08-18
+===================
+
+  * add `WithDuration()` method to record a duration as milliseconds
+  * add: ignore nil errors in `WithError()`
+  * change trace duration to milliseconds (arguably a breaking change)
+
 v1.8.0 / 2020-08-05
 ===================
 
