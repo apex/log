@@ -15,6 +15,7 @@ Package log implements a simple structured logging API inspired by Logrus, desig
 - __level__ – level filter handler
 - __logfmt__ – logfmt plain-text formatter
 - __memory__ – in-memory handler for tests
+- __logentries__ – Logentries.com handler
 - __multi__ – fan-out to multiple handlers
 - __papertrail__ – Papertrail handler
 - __text__ – human-friendly colored output
