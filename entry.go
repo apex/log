@@ -37,8 +37,10 @@ func (e *Entry) WithFields(fields Fielder) *Entry {
 	f = append(f, e.fields...)
 	f = append(f, fields.Fields())
 	return &Entry{
-		Logger: e.Logger,
-		fields: f,
+		Logger:  e.Logger,
+		fields:  f,
+		start:   e.start,
+		Message: e.Message,
 	}
 }
 
