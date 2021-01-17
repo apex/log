@@ -79,3 +79,12 @@ func MustParseLevel(s string) Level {
 
 	return l
 }
+
+// FromInt validates level integers.
+func FromInt(i int) (Level, error) {
+	if i < 0 || i >= len(levelNames) {
+		return InvalidLevel, ErrInvalidLevel
+	}
+
+	return levelStrings[levelNames[i]]
+}
