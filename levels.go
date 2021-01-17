@@ -86,5 +86,5 @@ func FromInt(i int) (Level, error) {
 		return InvalidLevel, ErrInvalidLevel
 	}
 
-	return levelStrings[levelNames[i]]
+	return levelStrings[levelNames[i]], nil
 }
