@@ -111,6 +111,26 @@ func (l *Logger) Fatal(msg string) {
 	NewEntry(l).Fatal(msg)
 }
 
+func (l *Logger) Debugl(msg logSupplier) {
+	NewEntry(l).Debugl(msg)
+}
+
+func (l *Logger) Infol(msg logSupplier) {
+	NewEntry(l).Infol(msg)
+}
+
+func (l *Logger) Warnl(msg logSupplier) {
+	NewEntry(l).Warnl(msg)
+}
+
+func (l *Logger) Errorl(msg logSupplier) {
+	NewEntry(l).Errorl(msg)
+}
+
+func (l *Logger) Fatall(msg logSupplier) {
+	NewEntry(l).Errorl(msg)
+}
+
 // Debugf level formatted message.
 func (l *Logger) Debugf(msg string, v ...interface{}) {
 	NewEntry(l).Debugf(msg, v...)
@@ -153,4 +173,13 @@ func (l *Logger) log(level Level, e *Entry, msg string) {
 	if err := l.Handler.HandleLog(e.finalize(level, msg)); err != nil {
 		stdlog.Printf("error logging: %s", err)
 	}
+}
+
+// logl the message. Similar to log but uses a lazy logSupplier to
+// avoid creating the message if the level is not met.
+func (l *Logger) logl(level Level, e *Entry, msg logSupplier) {
+	if level < l.Level {
+		return
+	}
+	l.log(level, e, msg())
 }
