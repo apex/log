@@ -245,3 +245,21 @@ func BenchmarkLogger_large(b *testing.B) {
 			WithError(err).Error("upload failed")
 	}
 }
+
+func TestLogger_logl(t *testing.T) {
+	h := memory.New()
+
+	l := &log.Logger{
+		Handler: h,
+		Level:   log.InfoLevel,
+	}
+
+	l.Debugl(func() string { assert.Fail(t, "Supplier should not be invoked."); return "ignored"})
+	l.Info("upload complete")
+
+	assert.Equal(t, 1, len(h.Entries))
+
+	e := h.Entries[0]
+	assert.Equal(t, e.Message, "upload complete")
+	assert.Equal(t, e.Level, log.InfoLevel)
+}

@@ -13,6 +13,10 @@ var _ Interface = (*Entry)(nil)
 // Now returns the current time.
 var Now = time.Now
 
+// logSupplier Allows lazy creation of strings for logging.
+// If the log line is skipped then this supplier will not be invoked.
+type logSupplier func() string
+
 // Entry represents a single log entry.
 type Entry struct {
 	Logger    *Logger   `json:"-"`
@@ -112,29 +116,55 @@ func (e *Entry) Fatal(msg string) {
 	os.Exit(1)
 }
 
+// Debugl level message.
+func (e *Entry) Debugl(msg logSupplier) {
+	e.Logger.logl(DebugLevel, e, msg)
+}
+
+// Infol level message.
+func (e *Entry) Infol(msg logSupplier) {
+	e.Logger.logl(InfoLevel, e, msg)
+}
+
+// Warnl level message.
+func (e *Entry) Warnl(msg logSupplier) {
+	e.Logger.logl(WarnLevel, e, msg)
+}
+
+// Errorl level message.
+func (e *Entry) Errorl(msg logSupplier) {
+	e.Logger.logl(ErrorLevel, e, msg)
+}
+
+// Fatall level message, followed by an exit.
+func (e *Entry) Fatall(msg logSupplier) {
+	e.Logger.logl(FatalLevel, e, msg)
+	os.Exit(1)
+}
+
 // Debugf level formatted message.
 func (e *Entry) Debugf(msg string, v ...interface{}) {
-	e.Debug(fmt.Sprintf(msg, v...))
+	e.Debugl(func() string { return fmt.Sprintf(msg, v...)})
 }
 
 // Infof level formatted message.
 func (e *Entry) Infof(msg string, v ...interface{}) {
-	e.Info(fmt.Sprintf(msg, v...))
+	e.Infol(func() string { return fmt.Sprintf(msg, v...)})
 }
 
 // Warnf level formatted message.
 func (e *Entry) Warnf(msg string, v ...interface{}) {
-	e.Warn(fmt.Sprintf(msg, v...))
+	e.Warnl(func() string { return fmt.Sprintf(msg, v...)})
 }
 
 // Errorf level formatted message.
 func (e *Entry) Errorf(msg string, v ...interface{}) {
-	e.Error(fmt.Sprintf(msg, v...))
+	e.Errorl(func() string { return fmt.Sprintf(msg, v...)})
 }
 
 // Fatalf level formatted message, followed by an exit.
 func (e *Entry) Fatalf(msg string, v ...interface{}) {
-	e.Fatal(fmt.Sprintf(msg, v...))
+	e.Fatall(func() string { return fmt.Sprintf(msg, v...)})
 }
 
 // Trace returns a new entry with a Stop method to fire off

@@ -76,6 +76,26 @@ func Fatal(msg string) {
 	Log.Fatal(msg)
 }
 
+func Debugl(msg logSupplier) {
+	Log.Debugl(msg)
+}
+
+func Infol(msg logSupplier) {
+	Log.Infol(msg)
+}
+
+func Warnl(msg logSupplier) {
+	Log.Warnl(msg)
+}
+
+func Errorl(msg logSupplier) {
+	Log.Errorl(msg)
+}
+
+func Fatall(msg logSupplier) {
+	Log.Fatall(msg)
+}
+
 // Debugf level formatted message.
 func Debugf(msg string, v ...interface{}) {
 	Log.Debugf(msg, v...)
