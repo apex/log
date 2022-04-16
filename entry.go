@@ -15,19 +15,21 @@ var Now = time.Now
 
 // Entry represents a single log entry.
 type Entry struct {
-	Logger    *Logger   `json:"-"`
-	Fields    Fields    `json:"fields"`
-	Level     Level     `json:"level"`
-	Timestamp time.Time `json:"timestamp"`
-	Message   string    `json:"message"`
-	start     time.Time
-	fields    []Fields
+	Logger     *Logger   `json:"-"`
+	Fields     Fields    `json:"fields"`
+	Level      Level     `json:"level"`
+	Timestamp  time.Time `json:"timestamp"`
+	Message    string    `json:"message"`
+	start      time.Time
+	fields     []Fields
+	traceLevel Level
 }
 
 // NewEntry returns a new entry for `log`.
 func NewEntry(log *Logger) *Entry {
 	return &Entry{
-		Logger: log,
+		Logger:     log,
+		traceLevel: InfoLevel,
 	}
 }
 
@@ -37,8 +39,9 @@ func (e *Entry) WithFields(fields Fielder) *Entry {
 	f = append(f, e.fields...)
 	f = append(f, fields.Fields())
 	return &Entry{
-		Logger: e.Logger,
-		fields: f,
+		Logger:     e.Logger,
+		fields:     f,
+		traceLevel: InfoLevel,
 	}
 }
 
@@ -84,6 +87,14 @@ func (e *Entry) WithError(err error) *Entry {
 	}
 
 	return ctx
+}
+
+// WithTraceAt returns a new entry with Trace() and Stop() methods
+// that log non-errors at the requested level.
+func (e *Entry) WithTraceAt(level Level) *Entry {
+	l := e.WithFields(e.Fields)
+	l.traceLevel = level
+	return l
 }
 
 // Debug level message.
@@ -140,10 +151,11 @@ func (e *Entry) Fatalf(msg string, v ...interface{}) {
 // Trace returns a new entry with a Stop method to fire off
 // a corresponding completion log, useful with defer.
 func (e *Entry) Trace(msg string) *Entry {
-	e.Info(msg)
+	e.Logger.log(e.traceLevel, e, msg)
 	v := e.WithFields(e.Fields)
 	v.Message = msg
 	v.start = time.Now()
+	v.traceLevel = e.traceLevel
 	return v
 }
 
@@ -151,7 +163,8 @@ func (e *Entry) Trace(msg string) *Entry {
 // an `err` is passed the "error" field is set, and the log level is error.
 func (e *Entry) Stop(err *error) {
 	if err == nil || *err == nil {
-		e.WithDuration(time.Since(e.start)).Info(e.Message)
+		d := e.WithDuration(time.Since(e.start))
+		d.Logger.log(e.traceLevel, d, e.Message)
 	} else {
 		e.WithDuration(time.Since(e.start)).WithError(*err).Error(e.Message)
 	}
@@ -173,10 +186,11 @@ func (e *Entry) mergedFields() Fields {
 // finalize returns a copy of the Entry with Fields merged.
 func (e *Entry) finalize(level Level, msg string) *Entry {
 	return &Entry{
-		Logger:    e.Logger,
-		Fields:    e.mergedFields(),
-		Level:     level,
-		Message:   msg,
-		Timestamp: Now(),
+		Logger:     e.Logger,
+		Fields:     e.mergedFields(),
+		Level:      level,
+		Message:    msg,
+		Timestamp:  Now(),
+		traceLevel: e.traceLevel,
 	}
 }
