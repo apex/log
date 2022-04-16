@@ -7,6 +7,7 @@ type Interface interface {
 	WithFields(Fielder) *Entry
 	WithField(string, interface{}) *Entry
 	WithDuration(time.Duration) *Entry
+	WithTraceAt(Level) *Entry
 	WithError(error) *Entry
 	Debug(string)
 	Info(string)

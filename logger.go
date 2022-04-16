@@ -86,6 +86,12 @@ func (l *Logger) WithError(err error) *Entry {
 	return NewEntry(l).WithError(err)
 }
 
+// WithTraceAt returns a new entry with Trace() and Stop() methods
+// that log non-errors at the requested level.
+func (l *Logger) WithTraceAt(level Level) *Entry {
+	return NewEntry(l).WithTraceAt(level)
+}
+
 // Debug level message.
 func (l *Logger) Debug(msg string) {
 	NewEntry(l).Debug(msg)
