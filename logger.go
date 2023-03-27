@@ -17,9 +17,15 @@ type Fielder interface {
 // Fields represents a map of entry level data used for structured logging.
 type Fields map[string]interface{}
 
-// Fields implements Fielder.
+// Fields implements Fielder, returning a shallow copy of Fields.
+// This is to prevent runtime error that happens when we read and
+// write a map at the same time.
 func (f Fields) Fields() Fields {
-	return f
+	res := map[string]interface{}{}
+	for k, v := range f {
+		res[k] = v
+	}
+	return res
 }
 
 // Get field value by name.

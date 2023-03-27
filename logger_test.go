@@ -2,6 +2,7 @@ package log_test
 
 import (
 	"fmt"
+	"sync"
 	"testing"
 
 	"github.com/apex/log"
@@ -192,6 +193,44 @@ func TestLogger_HandlerFunc(t *testing.T) {
 	e := h.Entries[0]
 	assert.Equal(t, e.Message, "logged in Tobi")
 	assert.Equal(t, e.Level, log.InfoLevel)
+}
+
+// TestLogger_Concurrent is testing the thread-safety of the library.
+// We're running a custom attribute that is read and written at the same
+// time in different goroutines.
+//
+// If the library is thread safe, this operation won't have any runtime errors.
+func TestLogger_Concurrent(t *testing.T) {
+	var l log.Interface
+	l = &log.Logger{
+		Handler: discard.New(),
+		Level:   log.DebugLevel,
+	}
+
+	type attribute map[string]interface{}
+	type withAttr struct {
+		guard sync.Mutex
+		attrs attribute
+	}
+
+	mm := withAttr{attrs: attribute{"one": 1}}
+
+	// loop to make sure collision of read and write happens
+	for i := 0; i < 50; i++ {
+		// write the fields
+		go func(val int) {
+			mm.guard.Lock()
+			defer mm.guard.Unlock()
+
+			mm.attrs[fmt.Sprintf("%d", val+1)] = val * val
+			l = l.WithFields(log.Fields(mm.attrs))
+		}(i)
+
+		// read the fields
+		go func(val int) {
+			l.Debugf("read %d", val)
+		}(i)
+	}
 }
 
 func BenchmarkLogger_small(b *testing.B) {
