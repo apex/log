@@ -41,6 +41,16 @@ var levelStrings = map[string]Level{
 
 // String implementation.
 func (l Level) String() string {
+	// InvalidLevel (-1) and any unknown level above FatalLevel fall
+	// outside the levelNames array, so unguarded indexing used to
+	// panic with 'index out of range' whenever a zero-value or
+	// unexpected Level flowed into String - notably through
+	// MarshalJSON on a field that was never explicitly set (#75).
+	// Return "invalid" in those cases instead of crashing; the
+	// in-range levels still round-trip as before.
+	if l < DebugLevel || int(l) >= len(levelNames) {
+		return "invalid"
+	}
 	return levelNames[l]
 }
 
