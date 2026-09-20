@@ -58,3 +58,30 @@ func TestLevel_UnmarshalJSON(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, InfoLevel, e.Level)
 }
+
+func TestLevel_String(t *testing.T) {
+	cases := []struct {
+		Level  Level
+		String string
+	}{
+		{DebugLevel, "debug"},
+		{InfoLevel, "info"},
+		{WarnLevel, "warn"},
+		{ErrorLevel, "error"},
+		{FatalLevel, "fatal"},
+		{InvalidLevel, "invalid"},
+		{Level(99), "invalid"},
+	}
+
+	for _, c := range cases {
+		t.Run(c.String, func(t *testing.T) {
+			assert.Equal(t, c.String, c.Level.String())
+		})
+	}
+}
+
+func TestLevel_MarshalJSON_Invalid(t *testing.T) {
+	b, err := json.Marshal(InvalidLevel)
+	assert.NoError(t, err)
+	assert.Equal(t, `"invalid"`, string(b))
+}
