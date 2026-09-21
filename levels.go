@@ -41,6 +41,9 @@ var levelStrings = map[string]Level{
 
 // String implementation.
 func (l Level) String() string {
+	if l < DebugLevel || int(l) >= len(levelNames) {
+		return "invalid"
+	}
 	return levelNames[l]
 }
 
